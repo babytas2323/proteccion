@@ -136,8 +136,8 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
 
   // Function to get image path based on environment
   const getImagePath = (imgPath) => {
-    // If it's already an absolute URL, return as is
-    if (imgPath.startsWith('http')) {
+    // If it's already an absolute URL or Base64 data URL, return as is
+    if (imgPath.startsWith('http') || imgPath.startsWith('data:')) {
       return imgPath;
     }
     
@@ -406,7 +406,7 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
                     {(point.imagenes || point.Imagenes).map((img, index) => (
                       <img 
                         key={index}
-                        src={`/${getImagePath(img)}`} 
+                        src={getImagePath(img)} 
                         alt={`Incidente ${index + 1}`} 
                         style={{ 
                           width: '100%', 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { uploadImageToCloudinary } from '../utils/imageUpload';
 
 const SensorForm = ({ onAddSensor }) => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const SensorForm = ({ onAddSensor }) => {
   const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -157,41 +159,6 @@ const SensorForm = ({ onAddSensor }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Function to upload image to Cloudinary
-  const uploadImageToCloudinary = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'tetela_radar'); // You'll need to create this upload preset in your Cloudinary account
-
-    try {
-      // Replace with your Cloudinary cloud name
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'your-cloud_name'}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        url: data.secure_url,
-        public_id: data.public_id,
-      };
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -220,7 +187,9 @@ const SensorForm = ({ onAddSensor }) => {
     // Handle image upload
     if (image) {
       try {
-        // Upload image to Cloudinary
+        setIsUploading(true);
+        
+        // Upload image to Cloudinary (with fallback)
         const imageData = await uploadImageToCloudinary(image);
         
         if (imageData.success) {
@@ -233,7 +202,9 @@ const SensorForm = ({ onAddSensor }) => {
         }
       } catch (error) {
         console.error('Error uploading image:', error);
-        alert('Error al conectar con el servidor para guardar la imagen');
+        alert('Error al conectar con el servidor para guardar la imagen: ' + error.message);
+      } finally {
+        setIsUploading(false);
       }
     }
 
@@ -305,6 +276,18 @@ const SensorForm = ({ onAddSensor }) => {
         }}>
           🌪️ Reportar Incidente por Huracán
         </h2>
+        
+        {isUploading && (
+          <div style={{
+            textAlign: 'center',
+            padding: '15px',
+            backgroundColor: '#e9ecef',
+            borderRadius: '8px',
+            marginBottom: '20px'
+          }}>
+            <p>📤 Subiendo imagen... Por favor espere</p>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} style={{ 
           display: 'flex',
@@ -887,6 +870,7 @@ const SensorForm = ({ onAddSensor }) => {
               name="image"
               accept="image/*"
               onChange={handleImageChange}
+              disabled={isUploading}
               style={{
                 width: '100%',
                 padding: '14px',
@@ -897,7 +881,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px',
                 transition: 'border-color 0.3s',
                 boxSizing: 'border-box',
-                cursor: 'pointer'
+                cursor: isUploading ? 'not-allowed' : 'pointer'
               }}
             />
             {errors.image && (
@@ -973,13 +957,14 @@ const SensorForm = ({ onAddSensor }) => {
           }}>
             <button 
               type="submit" 
+              disabled={isUploading}
               style={{
-                backgroundColor: '#007bff',
+                backgroundColor: isUploading ? '#6c757d' : '#007bff',
                 color: 'white',
                 padding: '14px 28px',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: 'pointer',
+                cursor: isUploading ? 'not-allowed' : 'pointer',
                 fontSize: '18px',
                 fontWeight: '600',
                 boxShadow: '0 4px 6px rgba(0,123,255,0.3)',
@@ -987,10 +972,18 @@ const SensorForm = ({ onAddSensor }) => {
                 minWidth: '200px',
                 marginRight: '10px'
               }}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+              onMouseOver={(e) => {
+                if (!isUploading) {
+                  e.target.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!isUploading) {
+                  e.target.style.transform = 'translateY(0)';
+                }
+              }}
             >
-              🌪️ Reportar 
+              {isUploading ? '📤 Subiendo...' : '🌪️ Reportar'}
             </button>
             <button 
               type="button" 
