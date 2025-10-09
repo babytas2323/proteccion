@@ -157,6 +157,41 @@ const SensorForm = ({ onAddSensor }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Function to upload image to Cloudinary
+  const uploadImageToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'tetela_radar'); // You'll need to create this upload preset in your Cloudinary account
+
+    try {
+      // Replace with your Cloudinary cloud name
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'your-cloud_name'}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        url: data.secure_url,
+        public_id: data.public_id,
+      };
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -182,24 +217,16 @@ const SensorForm = ({ onAddSensor }) => {
       imagenes: []
     };
 
-    // Handle image upload to backend
+    // Handle image upload
     if (image) {
       try {
-        const formDataImage = new FormData();
-        formDataImage.append('image', image);
-        
-        // Upload image to backend
-        const imageResponse = await fetch('http://localhost:3004/api/upload', {
-          method: 'POST',
-          body: formDataImage
-        });
-        
-        const imageData = await imageResponse.json();
+        // Upload image to Cloudinary
+        const imageData = await uploadImageToCloudinary(image);
         
         if (imageData.success) {
-          // Add image info to data
-          newAccident.imagenes = [imageData.path];
-          alert('Imagen guardada exitosamente: ' + imageData.filename);
+          // Add image URL to data
+          newAccident.imagenes = [imageData.url];
+          alert('Imagen guardada exitosamente');
         } else {
           console.error('Error uploading image:', imageData.error);
           alert('Error al guardar la imagen: ' + imageData.error);
