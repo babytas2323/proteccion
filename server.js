@@ -310,6 +310,7 @@ const startServer = (port) => {
   });
 };
 
+// For Render deployment, we need to use the PORT from environment variables
 startServer(PORT);
 
 export default app;
