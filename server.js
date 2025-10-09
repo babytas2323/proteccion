@@ -11,10 +11,39 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-let PORT = parseInt(process.env.PORT) || 3004; // Use environment port or default to 3004
+// Use the PORT from environment variables (provided by Render) or default to 3004
+const PORT = parseInt(process.env.PORT) || 3004;
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with options for production
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost for development
+    if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
+      return callback(null, true);
+    }
+    
+    // Allow your Vercel frontend and common deployment platforms
+    const allowedOrigins = [
+      'https://proteccion-ten.vercel.app',  // Your actual frontend domain
+      'https://tetela-radar.vercel.app',
+      'https://tetela-radar.netlify.app',
+      'https://your-frontend-domain.vercel.app',
+      'https://your-frontend-domain.netlify.app'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 
 // Serve static files from the public directory
 app.use(express.static('public'));

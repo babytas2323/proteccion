@@ -1,32 +1,92 @@
-# React + Vite
+# Tetela Radar - Sistema de Monitoreo de Incidentes
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de monitoreo y reporte de incidentes para la comunidad de Tetela de Ocampo, Puebla. Permite reportar y visualizar incidentes como huracanes, inundaciones, derrumbes y otros eventos climáticos en un mapa interactivo.
 
-Currently, two official plugins are available:
+## Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🗺️ Visualización de incidentes en mapa interactivo
+- 🌪️ Reporte de incidentes con información detallada
+- 📸 Carga de imágenes de los incidentes
+- 📱 Interfaz responsive y amigable
+- 🌐 Backend API para almacenamiento de datos
+- 📤 Exportación e importación de datos
 
-## React Compiler
+## Tecnologías
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Frontend
+- React 18
+- Vite
+- Leaflet para mapas interactivos
+- FontAwesome para iconos
 
-## Expanding the ESLint configuration
+### Backend
+- Node.js
+- Express
+- Multer para manejo de archivos
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# proteccion
+## Instalación Local
 
+1. Clonar el repositorio:
+   ```bash
+   git clone <url-del-repositorio>
+   cd tetela-radar
+   ```
 
-…o crear un nuevo repositorio en la línea de comandos
-echo "# proteccion" >> README.md
-git init
-git add README.md
-git commit -m "first commit"
-git branch -M main
-git remote add origin https://github.com/babytas2323/proteccion.git
-git push -u origin main
+2. Instalar dependencias:
+   ```bash
+   npm install
+   ```
 
-…o enviar un repositorio existente desde la línea de comandos
-git remote add origin https://github.com/babytas2323/proteccion.git
-git branch -M main
-git push -u origin main
+3. Iniciar el servidor backend:
+   ```bash
+   npm run server
+   ```
+
+4. En otra terminal, iniciar el servidor de desarrollo frontend:
+   ```bash
+   npm run dev
+   ```
+
+5. Abrir la aplicación en `http://localhost:5174`
+
+## Despliegue
+
+Para desplegar la aplicación en producción, consulta la [guía de despliegue](DEPLOYMENT.md) que incluye instrucciones para:
+
+- Desplegar el backend en Render o Railway
+- Desplegar el frontend en Vercel o Netlify
+- Configurar variables de entorno
+- Solucionar problemas comunes
+
+## Estructura del Proyecto
+
+```
+tetela-radar/
+├── api/              # Endpoints de API
+├── public/           # Archivos estáticos
+├── src/
+│   ├── components/   # Componentes de React
+│   ├── config/       # Configuración
+│   ├── data/         # Datos iniciales
+│   ├── utils/        # Funciones utilitarias
+│   ├── App.jsx       # Componente principal
+│   └── main.jsx      # Punto de entrada
+├── server.js         # Servidor backend
+└── DEPLOYMENT.md     # Guía de despliegue
+```
+
+## Contribución
+
+1. Haz fork del proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Realiza tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## Licencia
+
+Distribuido bajo la Licencia MIT. Ver `LICENSE` para más información.
+
+## Contacto
+
+Proyecto creado para la comunidad de Tetela de Ocampo, Puebla.

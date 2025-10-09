@@ -19,13 +19,13 @@ function App() {
   const getApiBaseUrl = () => {
     // In development, use localhost with the correct port
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:3004'; // Updated to match our backend server port
+      return 'http://localhost:3004';
     }
     
-    // For production, you could use an external API service
-    // For now, we'll use a placeholder - you'll need to replace this with your actual backend URL
-    // Example: return 'https://your-backend-service.vercel.app/api';
-    return null; // No backend available
+    // For production, use your deployed backend URL
+    // You'll need to deploy your backend and update this URL
+    // Example: return 'https://your-backend-name.onrender.com';
+    return null; // Currently no backend available for production
   };
 
   const apiBaseUrl = getApiBaseUrl();
