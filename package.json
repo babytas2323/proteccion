@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "postbuild": "cp -r public/images dist/images",
+    "build": "vite build && npm run copy-images",
+    "copy-images": "cp -r public/images dist/images",
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server.js"
