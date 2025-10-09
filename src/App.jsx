@@ -22,10 +22,15 @@ function App() {
       return 'http://localhost:3004';
     }
     
-    // For production, use your deployed backend URL
-    // You'll need to deploy your backend and update this URL
+    // For production, when deployed to Vercel, you need to deploy your backend
+    // and update this URL to point to your deployed backend service
     // Example: return 'https://your-backend-name.onrender.com';
-    return null; // Currently no backend available for production
+    
+    // IMPORTANT: To make data saving work on your deployed Vercel app,
+    // you need to deploy your backend and update this URL
+    console.warn('Backend API URL not configured for production. Data saving will not work.');
+    console.warn('Please deploy your backend and update the URL in App.jsx');
+    return null; // No backend available
   };
 
   const apiBaseUrl = getApiBaseUrl();

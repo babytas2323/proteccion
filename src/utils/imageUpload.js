@@ -5,7 +5,8 @@ export const uploadImageToCloudinary = async (file) => {
                         import.meta.env.VITE_CLOUDINARY_API_KEY;
   
   if (!hasCredentials) {
-    console.warn('Cloudinary credentials not found. Using local storage fallback.');
+    console.info('Cloudinary credentials not found. Using local storage fallback.');
+    console.info('For production deployments, configure Cloudinary environment variables for persistent image storage.');
     return saveImageLocally(file);
   }
 
