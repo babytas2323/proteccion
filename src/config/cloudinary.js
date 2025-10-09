@@ -1,8 +1,8 @@
 // Cloudinary configuration with better error handling
 const cloudinaryConfig = {
-  cloud_name: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'your-cloud-name',
-  api_key: import.meta.env.VITE_CLOUDINARY_API_KEY || 'your-api-key',
-  api_secret: import.meta.env.VITE_CLOUDINARY_API_SECRET || 'your-api-secret',
+  cloud_name: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dvyuii8ot',
+  api_key: import.meta.env.VITE_CLOUDINARY_API_KEY || '245658548747968',
+  api_secret: import.meta.env.VITE_CLOUDINARY_API_SECRET || '**********',
 };
 
 // Check if we have valid credentials
