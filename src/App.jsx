@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faInfoCircle, faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faInfoCircle, faPlus, faTimes, faDownload, faUpload } from '@fortawesome/free-solid-svg-icons';
 import MapComponent from './components/MapComponent';
 import SensorForm from './components/SensorForm';
 import './App.css';
@@ -21,13 +21,13 @@ function App() {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:3004';
     }
-    // In production, we'll use localStorage as fallback since Vercel is static
+    // In production, we'll use a more persistent storage approach
     return null;
   };
 
   const apiBaseUrl = getApiBaseUrl();
 
-  // Load accidents from backend API or localStorage/fallback
+  // Load accidents from backend API or session storage/fallback
   useEffect(() => {
     const fetchAccidents = async () => {
       try {
@@ -41,40 +41,43 @@ function App() {
           }
         }
         
-        // Fallback to localStorage or initial data
-        const savedAccidents = localStorage.getItem('tetela-accidents');
-        if (savedAccidents) {
-          setAccidents(JSON.parse(savedAccidents));
-        } else {
-          setAccidents(initialAccidentsData);
+        // Try multiple storage options
+        // 1. Check sessionStorage
+        const sessionAccidents = sessionStorage.getItem('tetela-accidents');
+        if (sessionAccidents) {
+          setAccidents(JSON.parse(sessionAccidents));
+          return;
         }
+        
+        // 2. Check localStorage (in case it still exists)
+        const localAccidents = localStorage.getItem('tetela-accidents');
+        if (localAccidents) {
+          setAccidents(JSON.parse(localAccidents));
+          return;
+        }
+        
+        // 3. Fallback to initial data
+        setAccidents(initialAccidentsData);
       } catch (error) {
         console.error('Error fetching accidents:', error);
-        // Final fallback to localStorage or initial data
-        try {
-          const savedAccidents = localStorage.getItem('tetela-accidents');
-          if (savedAccidents) {
-            setAccidents(JSON.parse(savedAccidents));
-          } else {
-            setAccidents(initialAccidentsData);
-          }
-        } catch (storageError) {
-          console.error('Error accessing localStorage:', storageError);
-          setAccidents(initialAccidentsData);
-        }
+        // Final fallback to initial data
+        setAccidents(initialAccidentsData);
       }
     };
 
     fetchAccidents();
   }, []);
 
-  // Save accidents to localStorage whenever they change (for Vercel deployment)
+  // Save accidents to both sessionStorage and localStorage for redundancy
   useEffect(() => {
     if (accidents.length > 0 && !apiBaseUrl) {
       try {
-        localStorage.setItem('tetela-accidents', JSON.stringify(accidents));
+        // Save to sessionStorage (less likely to be cleared)
+        sessionStorage.setItem('tetela-accidents', JSON.stringify(accidents));
+        // Also save to localStorage as backup
+        localStorage.setItem('tetela-accidents-backup', JSON.stringify(accidents));
       } catch (error) {
-        console.error('Error saving accidents to localStorage:', error);
+        console.error('Error saving accidents to storage:', error);
       }
     }
   }, [accidents, apiBaseUrl]);
@@ -103,15 +106,17 @@ function App() {
           return false;
         }
       } else {
-        // In production (Vercel), save to localStorage
-        setAccidents(prevAccidents => [...prevAccidents, newAccident]);
+        // In production (Vercel), save to storage
+        const updatedAccidents = [...accidents, newAccident];
+        setAccidents(updatedAccidents);
         setShowForm(false); // Close form after successful submission
         
-        // Save to localStorage
+        // Save to both storage mechanisms
         try {
-          localStorage.setItem('tetela-accidents', JSON.stringify([...accidents, newAccident]));
+          sessionStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
+          localStorage.setItem('tetela-accidents-backup', JSON.stringify(updatedAccidents));
         } catch (error) {
-          console.error('Error saving to localStorage:', error);
+          console.error('Error saving to storage:', error);
         }
         
         return true;
@@ -121,14 +126,16 @@ function App() {
       
       // In production, just add to local state
       if (!apiBaseUrl) {
-        setAccidents(prevAccidents => [...prevAccidents, newAccident]);
+        const updatedAccidents = [...accidents, newAccident];
+        setAccidents(updatedAccidents);
         setShowForm(false); // Close form after successful submission
         
-        // Save to localStorage
+        // Save to both storage mechanisms
         try {
-          localStorage.setItem('tetela-accidents', JSON.stringify([...accidents, newAccident]));
+          sessionStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
+          localStorage.setItem('tetela-accidents-backup', JSON.stringify(updatedAccidents));
         } catch (storageError) {
-          console.error('Error saving to localStorage:', storageError);
+          console.error('Error saving to storage:', storageError);
         }
         
         return true;
@@ -166,11 +173,12 @@ function App() {
           // In production (Vercel), restore from initial data
           setAccidents(initialAccidentsData);
           
-          // Save to localStorage
+          // Save to both storage mechanisms
           try {
-            localStorage.setItem('tetela-accidents', JSON.stringify(initialAccidentsData));
+            sessionStorage.setItem('tetela-accidents', JSON.stringify(initialAccidentsData));
+            localStorage.setItem('tetela-accidents-backup', JSON.stringify(initialAccidentsData));
           } catch (error) {
-            console.error('Error saving to localStorage:', error);
+            console.error('Error saving to storage:', error);
           }
           
           alert('Datos iniciales restaurados exitosamente.');
@@ -180,16 +188,67 @@ function App() {
         // Fallback to client-side restore
         setAccidents(initialAccidentsData);
         
-        // Save to localStorage
+        // Save to both storage mechanisms
         try {
-          localStorage.setItem('tetela-accidents', JSON.stringify(initialAccidentsData));
+          sessionStorage.setItem('tetela-accidents', JSON.stringify(initialAccidentsData));
+          localStorage.setItem('tetela-accidents-backup', JSON.stringify(initialAccidentsData));
         } catch (storageError) {
-          console.error('Error saving to localStorage:', storageError);
+          console.error('Error saving to storage:', storageError);
         }
         
         alert('Datos iniciales restaurados exitosamente.');
       }
     }
+  };
+
+  // Export data to file
+  const handleExportData = () => {
+    const dataStr = JSON.stringify(accidents, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `tetela-accidents-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  // Import data from file
+  const handleImportData = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (Array.isArray(data)) {
+          setAccidents(data);
+          
+          // Save to storage
+          if (!apiBaseUrl) {
+            try {
+              sessionStorage.setItem('tetela-accidents', JSON.stringify(data));
+              localStorage.setItem('tetela-accidents-backup', JSON.stringify(data));
+            } catch (error) {
+              console.error('Error saving imported data:', error);
+            }
+          }
+          
+          alert('Datos importados exitosamente!');
+        } else {
+          alert('Formato de archivo inválido. Debe ser un arreglo JSON.');
+        }
+      } catch (error) {
+        console.error('Error parsing imported file:', error);
+        alert('Error al importar el archivo. Asegúrese de que sea un archivo JSON válido.');
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    event.target.value = '';
   };
 
   // Toggle legend visibility
@@ -269,9 +328,47 @@ function App() {
                       <div className="legend-description">
                         <p><strong>Incidentes reportados:</strong> {accidents.length} incidentes en Tetela de Ocampo</p>
                         <p><strong>Última actualización:</strong> {new Date().toLocaleString('es-MX')}</p>
-                        <button onClick={handleRestoreInitialData} className="restore-button">
-                          Restaurar Datos Iniciales
-                        </button>
+                        
+                        {/* Data Management Buttons */}
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px' }}>
+                          <button 
+                            onClick={handleExportData} 
+                            className="restore-button"
+                            style={{ backgroundColor: '#28a745', display: 'flex', alignItems: 'center', gap: '5px' }}
+                          >
+                            <FontAwesomeIcon icon={faDownload} />
+                            Exportar Datos
+                          </button>
+                          
+                          <label 
+                            className="restore-button"
+                            style={{ 
+                              backgroundColor: '#007bff', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '5px',
+                              cursor: 'pointer',
+                              margin: 0
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faUpload} />
+                            Importar Datos
+                            <input 
+                              type="file" 
+                              accept=".json"
+                              onChange={handleImportData}
+                              style={{ display: 'none' }}
+                            />
+                          </label>
+                          
+                          <button 
+                            onClick={handleRestoreInitialData} 
+                            className="restore-button"
+                            style={{ backgroundColor: '#dc3545' }}
+                          >
+                            Restaurar Datos Iniciales
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
