@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "nombre": "Huracán Patricia",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2023-10-23",
+    "hora": "14:30",
+    "tipo": "Huracán",
+    "descripcion": "Fuertes vientos y lluvias intensas afectaron la región",
+    "coordenadas": [
+      -97.8096,
+      19.8116
+    ],
+    "nivel_riesgo": "high",
+    "afectados": 15,
+    "brigada_asignada": "Brigada de Emergencia 1",
+    "imagenes": [],
+    "type": "accident"
+  },
+  {
+    "id": 2,
+    "nombre": "Inundación por tormenta",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2023-09-15",
+    "hora": "08:45",
+    "tipo": "Inundación",
+    "descripcion": "Inundación en la calle principal por tormenta severa",
+    "coordenadas": [
+      -97.815,
+      19.808
+    ],
+    "nivel_riesgo": "medium",
+    "afectados": 8,
+    "brigada_asignada": "Brigada de Rescate 2",
+    "imagenes": [],
+    "type": "accident"
+  },
+  {
+    "id": 3188,
+    "nombre": "CASA ININDADA",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2025-10-09",
+    "hora": "03:01",
+    "tipo": "Inundación",
+    "descripcion": "MI CASA SE INUNDO ",
+    "coordenadas": [
+      -97.80671176551684,
+      19.81820394486863
+    ],
+    "nivel_riesgo": "medium",
+    "afectados": 4,
+    "brigada_asignada": "Montañeses",
+    "imagenes": [
+      "images/sensor-1760030454155-163436595.jpg"
+    ]
+  }
+]
