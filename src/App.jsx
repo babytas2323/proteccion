@@ -15,24 +15,28 @@ function App() {
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  // Determine the base URL for API calls
+  // Determine the base URL for API calls based on environment
   const getApiBaseUrl = () => {
-    // Always try to use localhost in development
+    // In development, use localhost
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      console.log('Development environment detected, using localhost API');
       return 'http://localhost:3004';
     }
-    // For production/deployment, still try to connect to the backend
-    // This will help us see the actual connection errors
-    return 'http://localhost:3004';
+    
+    // For production (Vercel), we need a different approach
+    // Since Vercel is static hosting, we can't run a backend server
+    // We'll return null to indicate no API is available
+    console.log('Production environment detected, no backend API available');
+    return null;
   };
 
   const apiBaseUrl = getApiBaseUrl();
 
-  // Load accidents from backend API only (no localStorage fallback)
+  // Load accidents from backend API or fallback to initial data
   useEffect(() => {
     const fetchAccidents = async () => {
       try {
-        // Try to fetch from API
+        // Try to fetch from API only in development
         if (apiBaseUrl) {
           console.log('Fetching accidents from API:', `${apiBaseUrl}/api/accidents`);
           const response = await fetch(`${apiBaseUrl}/api/accidents`);
@@ -48,6 +52,10 @@ function App() {
             console.error('API request failed with status:', response.status, 'Response:', errorText);
             throw new Error(`API request failed: ${response.status} ${response.statusText}\nResponse: ${errorText}`);
           }
+        } else {
+          // In production (Vercel), use initial data
+          console.log('Using initial data in production environment');
+          setAccidents(initialAccidentsData);
         }
       } catch (error) {
         console.error('Error fetching accidents:', error);
@@ -64,7 +72,7 @@ function App() {
     try {
       console.log('Attempting to save accident:', newAccident);
       
-      // Try to save to backend API
+      // Try to save to backend API only in development
       if (apiBaseUrl) {
         console.log('Sending request to API:', `${apiBaseUrl}/api/accidents`);
         const response = await fetch(`${apiBaseUrl}/api/accidents`, {
@@ -99,6 +107,12 @@ function App() {
           alert(`Error al conectar con el servidor: ${response.status} ${response.statusText}\n${errorText}`);
           return false;
         }
+      } else {
+        // In production (Vercel), show appropriate message
+        const errorMessage = 'Esta aplicación está en modo de solo lectura. Para guardar datos, ejecute la aplicación localmente con el servidor backend.';
+        console.log(errorMessage);
+        alert(errorMessage);
+        return false;
       }
     } catch (error) {
       console.error('Error adding accident:', error);
@@ -116,7 +130,7 @@ function App() {
   const handleRestoreInitialData = async () => {
     if (window.confirm('¿Está seguro de que desea restaurar los datos iniciales? Esto eliminará todos los incidentes agregados.')) {
       try {
-        // Try to restore via backend API
+        // Try to restore via backend API only in development
         if (apiBaseUrl) {
           console.log('Sending restore request to API:', `${apiBaseUrl}/api/accidents/restore`);
           const response = await fetch(`${apiBaseUrl}/api/accidents/restore`, {
@@ -142,6 +156,10 @@ function App() {
             console.error('Restore API request failed:', response.status, errorText);
             alert(`Error al conectar con el servidor: ${response.status} ${response.statusText}\n${errorText}`);
           }
+        } else {
+          // In production (Vercel), just reset to initial data
+          setAccidents(initialAccidentsData);
+          alert('Datos iniciales restaurados exitosamente (modo de solo lectura).');
         }
       } catch (error) {
         console.error('Error restoring initial data:', error);
@@ -306,6 +324,19 @@ function App() {
                           >
                             Restaurar Datos Iniciales
                           </button>
+                        </div>
+                        
+                        {/* Environment Info */}
+                        <div style={{ 
+                          marginTop: '15px', 
+                          padding: '10px', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '5px',
+                          fontSize: '12px',
+                          color: '#6c757d'
+                        }}>
+                          <p><strong>Entorno:</strong> {apiBaseUrl ? 'Desarrollo (con backend)' : 'Producción (solo lectura)'}</p>
+                          {apiBaseUrl && <p><strong>API URL:</strong> {apiBaseUrl}</p>}
                         </div>
                       </div>
                     </div>
