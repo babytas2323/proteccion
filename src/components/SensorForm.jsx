@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { uploadImageToCloudinary } from '../utils/imageUpload';
 
 const SensorForm = ({ onAddSensor }) => {
   const navigate = useNavigate();
@@ -18,8 +17,6 @@ const SensorForm = ({ onAddSensor }) => {
     coordinates: ['', ''],
     riskLevel: 'low'
   });
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,47 +73,6 @@ const SensorForm = ({ onAddSensor }) => {
         ...prev,
         coordinates: ['', '']
       }));
-    }
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    console.log('Image file selected:', file);
-    
-    if (file) {
-      // Check if file is an image
-      if (!file.type.match('image.*')) {
-        const errorMsg = 'Por favor seleccione un archivo de imagen válido (JPEG, PNG, GIF)';
-        console.error('Invalid file type:', file.type);
-        setErrors(prev => ({
-          ...prev,
-          image: errorMsg
-        }));
-        return;
-      }
-      
-      // Check file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        const errorMsg = 'La imagen debe ser menor a 2MB. Tamaño actual: ' + (file.size / (1024 * 1024)).toFixed(2) + 'MB';
-        console.error('File too large:', file.size);
-        setErrors(prev => ({
-          ...prev,
-          image: errorMsg
-        }));
-        return;
-      }
-      
-      setImage(file);
-      setPreview(URL.createObjectURL(file));
-      console.log('Image preview created');
-      
-      // Clear image error if valid
-      if (errors.image) {
-        setErrors(prev => ({
-          ...prev,
-          image: ''
-        }));
-      }
     }
   };
 
@@ -188,7 +144,6 @@ const SensorForm = ({ onAddSensor }) => {
     
     // Create a new accident object
     const newAccident = {
-      id: Math.floor(1000 + Math.random() * 9000),
       nombre: formData.incidentName,
       municipio: formData.municipality,
       fecha: formData.date,
@@ -198,33 +153,10 @@ const SensorForm = ({ onAddSensor }) => {
       coordenadas: [parseFloat(formData.coordinates[0]), parseFloat(formData.coordinates[1])],
       nivel_riesgo: formData.riskLevel,
       afectados: parseInt(formData.affected),
-      brigada_asignada: formData.assignedTeam,
-      imagenes: []
+      brigada_asignada: formData.assignedTeam
     };
     
     console.log('Created accident object:', newAccident);
-
-    // Handle image upload
-    if (image) {
-      try {
-        console.log('Uploading image to Cloudinary');
-        const imageData = await uploadImageToCloudinary(image);
-        console.log('Image upload result:', imageData);
-        
-        if (imageData.success) {
-          // Add image URL to data
-          newAccident.imagenes = [imageData.url];
-          alert('Imagen guardada exitosamente');
-        } else {
-          const errorMsg = imageData.error || 'Error desconocido al guardar la imagen';
-          console.error('Image upload failed:', errorMsg);
-          alert('Error al guardar la imagen: ' + errorMsg);
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        alert('Error al conectar con el servidor para guardar la imagen: ' + error.message);
-      }
-    }
 
     // Call the parent function to add the data
     try {
@@ -248,8 +180,6 @@ const SensorForm = ({ onAddSensor }) => {
           coordinates: ['', ''],
           riskLevel: 'low'
         });
-        setImage(null);
-        setPreview(null);
         setErrors({});
         setUseCurrentLocation(false);
         
@@ -872,105 +802,6 @@ const SensorForm = ({ onAddSensor }) => {
               <option value="medium" style={{ color: '#ffc107' }}>🟡 Medio</option>
               <option value="high" style={{ color: '#dc3545' }}>🔴 Alto</option>
             </select>
-          </div>
-
-          {/* Image Upload */}
-          <div className="form-group">
-            <label 
-              htmlFor="image" 
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              📷 Imagen del Incidente (máx. 2MB)
-            </label>
-            <input
-              type="file"
-              id="image"
-              name="image"
-              accept="image/*"
-              onChange={handleImageChange}
-              disabled={isSubmitting}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: '2px dashed #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#f8f9fa',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer'
-              }}
-            />
-            {errors.image && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.image}
-              </span>
-            )}
-            {preview && (
-              <div className="image-preview" style={{
-                marginTop: '15px',
-                textAlign: 'center',
-                padding: '15px',
-                border: '1px solid #ced4da',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px'
-              }}>
-                <h4 style={{
-                  color: '#333',
-                  margin: '0 0 15px 0',
-                  fontSize: '16px',
-                  fontWeight: '600'
-                }}>
-                  🖼️ Vista previa de la imagen:
-                </h4>
-                <img 
-                  src={preview} 
-                  alt="Preview" 
-                  style={{ 
-                    width: '100%',
-                    maxWidth: '200px',
-                    height: 'auto',
-                    maxHeight: '200px',
-                    objectFit: 'cover',
-                    border: '2px solid #007bff',
-                    borderRadius: '8px',
-                    boxShadow: '0 3px 10px rgba(0,0,0,0.1)'
-                  }} 
-                />
-                <p style={{
-                  fontSize: '14px',
-                  color: '#28a745',
-                  margin: '15px 0 0 0',
-                  fontWeight: '600'
-                }}>
-                  ✅ Imagen válida
-                </p>
-              </div>
-            )}
-            <p className="note" style={{
-              color: '#6c757d',
-              fontSize: '13px',
-              fontStyle: 'italic',
-              marginTop: '10px',
-              backgroundColor: '#e9ecef',
-              padding: '10px',
-              borderRadius: '6px'
-            }}>
-              📝 Nota: La imagen se guardará automáticamente en el servidor cuando agregues el incidente
-            </p>
           </div>
 
           {/* Full Width Actions */}

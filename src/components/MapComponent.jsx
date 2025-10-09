@@ -182,7 +182,7 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
       )}
       
       {/* Accidents Markers with FontAwesome Icons */}
-      {sensors && sensors.map(point => {
+      {sensors && sensors.map((point, index) => {
         // Debug: Log each point
         console.log('Processing point:', point);
         
@@ -320,7 +320,7 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
         
         return (
           <Marker
-            key={point.id}
+            key={point.id || index}
             position={position}
             icon={getPointMarkerIcon()}
           >
@@ -410,11 +410,11 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
                     borderTop: '1px solid #eee',
                     paddingTop: '10px'
                   }}>
-                    {(point.imagenes || point.Imagenes).map((img, index) => (
+                    {(point.imagenes || point.Imagenes).map((img, imgIndex) => (
                       <img 
-                        key={index}
+                        key={imgIndex}
                         src={getImagePath(img)} 
-                        alt={`Incidente ${index + 1}`} 
+                        alt={`Incidente ${imgIndex + 1}`} 
                         onError={(e) => {
                           // Handle image loading errors
                           console.error('Failed to load image:', img);

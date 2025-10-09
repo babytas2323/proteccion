@@ -14,70 +14,63 @@ function App() {
   const [userLocation, setUserLocation] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [backendAvailable, setBackendAvailable] = useState(false);
+  const [apiBaseUrl] = useState('http://localhost:3004');
 
-  // Determine the base URL for API calls
-  const getApiBaseUrl = () => {
-    // In development, use localhost with the correct port
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:3004'; // Node.js backend for local development
+  // Check if backend is available
+  const checkBackendAvailability = async () => {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/health`);
+      if (response.ok) {
+        setBackendAvailable(true);
+        return true;
+      }
+    } catch (error) {
+      console.log('Backend not available');
     }
-    
-    // For production, you need to deploy your backend and update this URL
-    // Examples of what you should replace it with:
-    // For PHP backend on 000webhost: return 'https://your-actual-site.000webhostapp.com/api';
-    // For Node.js backend on Render: return 'https://your-app-name.onrender.com';
-    // For PHP backend on InfinityFree: return 'https://your-username.infinityfreeapp.com/api';
-    
-    // IMPORTANT: Replace this placeholder with your actual deployed backend URL
-    console.warn('⚠️ Backend API URL not configured for production');
-    console.warn('📄 File to update: src/App.jsx');
-    console.warn('📝 Location: getApiBaseUrl() function, line ~25');
-    console.warn('🔧 Action: Replace the return value with your actual backend URL');
-    return null; // No backend available - this is why data saving doesn't work
+    setBackendAvailable(false);
+    return false;
   };
 
-  const apiBaseUrl = getApiBaseUrl();
-
-  // Load accidents from backend API or fallback to initial data
+  // Load accidents data when component mounts
   useEffect(() => {
-    const fetchAccidents = async () => {
+    const loadAccidentsData = async () => {
       try {
-        // Try to fetch from API
-        if (apiBaseUrl) {
-          console.log('Fetching accidents from API:', `${apiBaseUrl}/api/accidents`);
+        // Check if backend is available
+        const isBackendAvailable = await checkBackendAvailability();
+        
+        if (isBackendAvailable) {
+          // Load from backend
           const response = await fetch(`${apiBaseUrl}/api/accidents`);
-          console.log('API response status:', response.status);
-          
           if (response.ok) {
             const data = await response.json();
-            console.log('Accidents data received:', data);
             setAccidents(data);
             return;
-          } else {
-            throw new Error(`API request failed: ${response.status}`);
           }
-        } else {
-          // No backend available, use initial data
-          console.log('No backend available, using initial data');
-          setAccidents(initialAccidentsData);
         }
+        
+        // Fallback to local data
+        console.log('Using local fallback data');
+        setAccidents(initialAccidentsData);
       } catch (error) {
-        console.error('Error fetching accidents:', error);
-        // Fallback to initial data
+        console.error('Error loading accidents data:', error);
+        // Fallback to local data in case of error
         setAccidents(initialAccidentsData);
       }
     };
 
-    fetchAccidents();
-  }, []);
+    loadAccidentsData();
+  }, [apiBaseUrl]);
 
   const handleAddAccident = async (newAccident) => {
     try {
       console.log('Attempting to save accident:', newAccident);
       
-      // Try to save to backend API
-      if (apiBaseUrl) {
-        console.log('Sending request to API:', `${apiBaseUrl}/api/accidents`);
+      // Check if backend is available
+      const isBackendAvailable = await checkBackendAvailability();
+      
+      if (isBackendAvailable) {
+        // Save to backend
         const response = await fetch(`${apiBaseUrl}/api/accidents`, {
           method: 'POST',
           headers: {
@@ -86,47 +79,37 @@ function App() {
           body: JSON.stringify(newAccident),
         });
         
-        console.log('API response status:', response.status);
-        
         if (response.ok) {
           const result = await response.json();
-          console.log('API response data:', result);
-          
-          if (result.success) {
-            // Update state with new accident
-            setAccidents(prevAccidents => [...prevAccidents, newAccident]);
-            setShowForm(false); // Close form after successful submission
-            alert('Reporte de incidente agregado exitosamente!');
-            return true;
-          } else {
-            const errorMessage = result.error || 'Error desconocido al guardar el incidente';
-            console.error('API returned error:', errorMessage);
-            alert(`Error al guardar el incidente: ${errorMessage}`);
-            return false;
-          }
+          // Add to local state
+          const updatedAccidents = [...accidents, result.data];
+          setAccidents(updatedAccidents);
+          setShowForm(false);
+          alert('Reporte de incidente agregado exitosamente!');
+          return true;
         } else {
-          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+          const errorData = await response.json();
+          alert(`Error al guardar el incidente: ${errorData.error}`);
+          return false;
         }
       } else {
-        // No backend available
-        const errorMessage = 'No se puede guardar datos en este entorno. Para guardar datos, debe implementar un servicio backend externo y configurar la URL en src/App.jsx';
-        console.log(errorMessage);
-        alert(errorMessage);
-        return false;
+        // Fallback to localStorage if backend is not available
+        const updatedAccidents = [...accidents, {...newAccident, id: Date.now()}];
+        setAccidents(updatedAccidents);
+        try {
+          localStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
+          console.log('Accidents saved to localStorage as fallback');
+        } catch (error) {
+          console.error('Error saving to localStorage:', error);
+        }
+        setShowForm(false);
+        alert('Reporte de incidente agregado localmente. Para guardar permanentemente en el archivo accidents.json, inicie el servidor backend con "npm run backend".');
+        return true;
       }
     } catch (error) {
       console.error('Error adding accident:', error);
-      // Provide more specific error message
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        alert(`Error de conexión: No se puede conectar con el servidor backend. Verifique que:
-1. Ha desplegado su backend
-2. Ha actualizado la URL en src/App.jsx
-3. La URL es correcta y accesible
-
-Error detallado: ${error.message}`);
-      } else {
-        alert(`Error al conectar con el servidor para guardar el incidente: ${error.message}`);
-      }
+      alert(`Error al agregar el incidente: ${error.message}`);
+      setShowForm(false);
       return false;
     }
   };
@@ -140,38 +123,32 @@ Error detallado: ${error.message}`);
   const handleRestoreInitialData = async () => {
     if (window.confirm('¿Está seguro de que desea restaurar los datos iniciales? Esto eliminará todos los incidentes agregados.')) {
       try {
-        // Try to restore via backend API
-        if (apiBaseUrl) {
-          console.log('Sending restore request to API:', `${apiBaseUrl}/api/accidents/restore`);
+        // Check if backend is available
+        const isBackendAvailable = await checkBackendAvailability();
+        
+        if (isBackendAvailable) {
           const response = await fetch(`${apiBaseUrl}/api/accidents/restore`, {
             method: 'POST',
           });
           
-          console.log('Restore API response status:', response.status);
-          
           if (response.ok) {
             const result = await response.json();
-            console.log('Restore API response data:', result);
-            
-            if (result.success) {
-              setAccidents(initialAccidentsData);
-              alert('Datos iniciales restaurados exitosamente.');
-            } else {
-              const errorMessage = result.error || 'Error desconocido al restaurar los datos';
-              console.error('API returned error:', errorMessage);
-              alert(`Error al restaurar los datos: ${errorMessage}`);
-            }
+            setAccidents(result.data);
+            alert('Datos iniciales restaurados exitosamente.');
+            return;
           } else {
-            throw new Error(`API request failed: ${response.status}`);
+            const errorData = await response.json();
+            alert(`Error al restaurar los datos: ${errorData.error}`);
+            return;
           }
-        } else {
-          // No backend available
-          setAccidents(initialAccidentsData);
-          alert('Datos iniciales restaurados exitosamente (datos locales).');
         }
+        
+        // Fallback to local data
+        setAccidents(initialAccidentsData);
+        alert('Datos iniciales restaurados exitosamente (datos locales).');
       } catch (error) {
         console.error('Error restoring initial data:', error);
-        alert(`Error al conectar con el servidor para restaurar los datos: ${error.message}`);
+        alert('Error al restaurar los datos iniciales.');
       }
     }
   };
@@ -343,12 +320,12 @@ Error detallado: ${error.message}`);
                           fontSize: '12px',
                           color: '#6c757d'
                         }}>
-                          <p><strong>Entorno:</strong> {apiBaseUrl ? 'Con backend disponible' : 'Sin backend (solo lectura)'}</p>
-                          {apiBaseUrl && <p><strong>API URL:</strong> {apiBaseUrl}</p>}
-                          {!apiBaseUrl && (
+                          <p><strong>Entorno:</strong> {backendAvailable ? 'Con backend disponible' : 'Sin backend (solo lectura)'}</p>
+                          <p><strong>API URL:</strong> {apiBaseUrl}</p>
+                          {!backendAvailable && (
                             <p>
-                              <strong>Nota:</strong> Para guardar datos permanentemente, ejecute la aplicación localmente 
-                              con el servidor backend o implemente un servicio backend externo.
+                              <strong>Nota:</strong> Los datos se guardan localmente en su navegador. 
+                              Para guardar permanentemente en el archivo accidents.json, inicie el servidor backend: <code>npm run backend</code>
                             </p>
                           )}
                         </div>
