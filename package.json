@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run copy-images",
-    "copy-images": "cp -r public/images dist/images",
+    "copy-images": "node copy-images.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server.js"

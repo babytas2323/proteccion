@@ -12,16 +12,38 @@ function App() {
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  // Load accidents from backend API
+  // Determine the base URL for API calls
+  const getApiBaseUrl = () => {
+    // In development, use localhost
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:3004';
+    }
+    // In production (Vercel), use relative paths for static data
+    return '';
+  };
+
+  const apiBaseUrl = getApiBaseUrl();
+
+  // Load accidents from backend API or local data
   useEffect(() => {
     const fetchAccidents = async () => {
       try {
-        const response = await fetch('http://localhost:3004/api/accidents');
-        const data = await response.json();
-        setAccidents(data);
+        // Try to fetch from API first
+        if (apiBaseUrl) {
+          const response = await fetch(`${apiBaseUrl}/api/accidents`);
+          if (response.ok) {
+            const data = await response.json();
+            setAccidents(data);
+            return;
+          }
+        }
+        // Fallback to local data if API fails or in production
+        import('./data/accidents.json').then((accidentsData) => {
+          setAccidents(accidentsData.default);
+        });
       } catch (error) {
         console.error('Error fetching accidents:', error);
-        // Fallback to local data if API fails
+        // Final fallback to local data
         import('./data/accidents.json').then((accidentsData) => {
           setAccidents(accidentsData.default);
         });
@@ -33,30 +55,44 @@ function App() {
 
   const handleAddAccident = async (newAccident) => {
     try {
-      // Save accident to backend
-      const response = await fetch('http://localhost:3004/api/accidents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newAccident),
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        // Update state with new accident
+      // Only try to save to backend in development
+      if (apiBaseUrl) {
+        const response = await fetch(`${apiBaseUrl}/api/accidents`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newAccident),
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Update state with new accident
+          setAccidents(prevAccidents => [...prevAccidents, newAccident]);
+          setShowForm(false); // Close form after successful submission
+          return true;
+        } else {
+          alert('Error al guardar el incidente: ' + result.error);
+          return false;
+        }
+      } else {
+        // In production (Vercel), just add to local state
+        setAccidents(prevAccidents => [...prevAccidents, newAccident]);
+        setShowForm(false); // Close form after successful submission
+        return true;
+      }
+    } catch (error) {
+      console.error('Error adding accident:', error);
+      // In production, just add to local state
+      if (!apiBaseUrl) {
         setAccidents(prevAccidents => [...prevAccidents, newAccident]);
         setShowForm(false); // Close form after successful submission
         return true;
       } else {
-        alert('Error al guardar el incidente: ' + result.error);
+        alert('Error al conectar con el servidor para guardar el incidente');
         return false;
       }
-    } catch (error) {
-      console.error('Error adding accident:', error);
-      alert('Error al conectar con el servidor para guardar el incidente');
-      return false;
     }
   };
 
@@ -69,24 +105,11 @@ function App() {
   const handleRestoreInitialData = () => {
     if (window.confirm('¿Está seguro de que desea restaurar los datos iniciales? Esto eliminará todos los incidentes agregados.')) {
       // In a real app, you would call a backend endpoint to restore data
-      // For now, we'll just reload the initial data from the API
-      const fetchAccidents = async () => {
-        try {
-          const response = await fetch('http://localhost:3004/api/accidents');
-          const data = await response.json();
-          setAccidents(data);
-          alert('Datos iniciales restaurados exitosamente.');
-        } catch (error) {
-          console.error('Error fetching accidents:', error);
-          // Fallback to local data if API fails
-          import('./data/accidents.json').then((accidentsData) => {
-            setAccidents(accidentsData.default);
-            alert('Datos iniciales restaurados exitosamente.');
-          });
-        }
-      };
-
-      fetchAccidents();
+      // For now, we'll just reload the initial data
+      import('./data/accidents.json').then((accidentsData) => {
+        setAccidents(accidentsData.default);
+        alert('Datos iniciales restaurados exitosamente.');
+      });
     }
   };
 

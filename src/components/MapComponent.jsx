@@ -134,6 +134,23 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
     return new Date(dateString).toLocaleDateString('es-ES', options);
   };
 
+  // Function to get image path based on environment
+  const getImagePath = (imgPath) => {
+    // If it's already an absolute URL, return as is
+    if (imgPath.startsWith('http')) {
+      return imgPath;
+    }
+    
+    // For Vercel deployment, images are in the dist/images directory
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      // Remove leading slash if present and prepend with images/
+      return imgPath.startsWith('/') ? `images${imgPath}` : `images/${imgPath}`;
+    }
+    
+    // For local development, keep the original path
+    return imgPath;
+  };
+
   return (
     <MapContainer center={[19.8116, -97.8096]} zoom={13} style={{ height: '100%', width: '100%' }}>
       <TileLayer
@@ -389,7 +406,7 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
                     {(point.imagenes || point.Imagenes).map((img, index) => (
                       <img 
                         key={index}
-                        src={`/${img}`} 
+                        src={`/${getImagePath(img)}`} 
                         alt={`Incidente ${index + 1}`} 
                         style={{ 
                           width: '100%', 
