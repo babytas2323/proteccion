@@ -19,14 +19,15 @@ function App() {
   const getApiBaseUrl = () => {
     // In development, use localhost with the correct port
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:3004';
+      // For PHP backend, you might use something like:
+      // return 'http://localhost/tetela-radar/api';
+      return 'http://localhost:3004'; // Node.js backend
     }
     
-    // For production with external backend
-    // YOU NEED TO DEPLOY YOUR BACKEND AND UPDATE THIS URL
-    // Example: return 'https://your-backend-name.onrender.com';
-    // Follow the deployment guide in DEPLOYMENT.md or QUICK_DEPLOYMENT_STEPS.md
-    return null; // No external backend configured yet
+    // For production with PHP backend
+    // Update this to point to your PHP backend URL
+    // Example: return 'https://yourdomain.com/api';
+    return 'https://your-php-backend-url.com/api'; // Update with your actual PHP backend URL
   };
 
   const apiBaseUrl = getApiBaseUrl();
