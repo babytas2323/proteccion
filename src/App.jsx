@@ -15,19 +15,17 @@ function App() {
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  // Determine the base URL for API calls based on environment
+  // Determine the base URL for API calls
   const getApiBaseUrl = () => {
-    // In development, use localhost
+    // In development, use localhost with the correct port
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      console.log('Development environment detected, using localhost API');
-      return 'http://localhost:3004';
+      return 'http://localhost:3004'; // Updated to match our backend server port
     }
     
-    // For production (Vercel), we need a different approach
-    // Since Vercel is static hosting, we can't run a backend server
-    // We'll return null to indicate no API is available
-    console.log('Production environment detected, no backend API available');
-    return null;
+    // For production, you could use an external API service
+    // For now, we'll use a placeholder - you'll need to replace this with your actual backend URL
+    // Example: return 'https://your-backend-service.vercel.app/api';
+    return null; // No backend available
   };
 
   const apiBaseUrl = getApiBaseUrl();
@@ -36,7 +34,7 @@ function App() {
   useEffect(() => {
     const fetchAccidents = async () => {
       try {
-        // Try to fetch from API only in development
+        // Try to fetch from API
         if (apiBaseUrl) {
           console.log('Fetching accidents from API:', `${apiBaseUrl}/api/accidents`);
           const response = await fetch(`${apiBaseUrl}/api/accidents`);
@@ -48,18 +46,15 @@ function App() {
             setAccidents(data);
             return;
           } else {
-            const errorText = await response.text();
-            console.error('API request failed with status:', response.status, 'Response:', errorText);
-            throw new Error(`API request failed: ${response.status} ${response.statusText}\nResponse: ${errorText}`);
+            throw new Error(`API request failed: ${response.status}`);
           }
         } else {
-          // In production (Vercel), use initial data
-          console.log('Using initial data in production environment');
+          // No backend available, use initial data
+          console.log('No backend available, using initial data');
           setAccidents(initialAccidentsData);
         }
       } catch (error) {
         console.error('Error fetching accidents:', error);
-        alert(`Error al cargar los datos: ${error.message}`);
         // Fallback to initial data
         setAccidents(initialAccidentsData);
       }
@@ -72,7 +67,7 @@ function App() {
     try {
       console.log('Attempting to save accident:', newAccident);
       
-      // Try to save to backend API only in development
+      // Try to save to backend API
       if (apiBaseUrl) {
         console.log('Sending request to API:', `${apiBaseUrl}/api/accidents`);
         const response = await fetch(`${apiBaseUrl}/api/accidents`, {
@@ -102,14 +97,11 @@ function App() {
             return false;
           }
         } else {
-          const errorText = await response.text();
-          console.error('API request failed:', response.status, errorText);
-          alert(`Error al conectar con el servidor: ${response.status} ${response.statusText}\n${errorText}`);
-          return false;
+          throw new Error(`API request failed: ${response.status}`);
         }
       } else {
-        // In production (Vercel), show appropriate message
-        const errorMessage = 'Esta aplicación está en modo de solo lectura. Para guardar datos, ejecute la aplicación localmente con el servidor backend.';
+        // No backend available
+        const errorMessage = 'No se puede guardar datos en este entorno. Para guardar datos, ejecute la aplicación localmente con el servidor backend o implemente un servicio backend externo.';
         console.log(errorMessage);
         alert(errorMessage);
         return false;
@@ -130,7 +122,7 @@ function App() {
   const handleRestoreInitialData = async () => {
     if (window.confirm('¿Está seguro de que desea restaurar los datos iniciales? Esto eliminará todos los incidentes agregados.')) {
       try {
-        // Try to restore via backend API only in development
+        // Try to restore via backend API
         if (apiBaseUrl) {
           console.log('Sending restore request to API:', `${apiBaseUrl}/api/accidents/restore`);
           const response = await fetch(`${apiBaseUrl}/api/accidents/restore`, {
@@ -152,14 +144,12 @@ function App() {
               alert(`Error al restaurar los datos: ${errorMessage}`);
             }
           } else {
-            const errorText = await response.text();
-            console.error('Restore API request failed:', response.status, errorText);
-            alert(`Error al conectar con el servidor: ${response.status} ${response.statusText}\n${errorText}`);
+            throw new Error(`API request failed: ${response.status}`);
           }
         } else {
-          // In production (Vercel), just reset to initial data
+          // No backend available
           setAccidents(initialAccidentsData);
-          alert('Datos iniciales restaurados exitosamente (modo de solo lectura).');
+          alert('Datos iniciales restaurados exitosamente (datos locales).');
         }
       } catch (error) {
         console.error('Error restoring initial data:', error);
@@ -335,8 +325,14 @@ function App() {
                           fontSize: '12px',
                           color: '#6c757d'
                         }}>
-                          <p><strong>Entorno:</strong> {apiBaseUrl ? 'Desarrollo (con backend)' : 'Producción (solo lectura)'}</p>
+                          <p><strong>Entorno:</strong> {apiBaseUrl ? 'Con backend disponible' : 'Sin backend (solo lectura)'}</p>
                           {apiBaseUrl && <p><strong>API URL:</strong> {apiBaseUrl}</p>}
+                          {!apiBaseUrl && (
+                            <p>
+                              <strong>Nota:</strong> Para guardar datos permanentemente, ejecute la aplicación localmente 
+                              con el servidor backend o implemente un servicio backend externo.
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = 3004;
+let PORT = parseInt(process.env.PORT) || 3004; // Use environment port or default to 3004
 
 // Enable CORS
 app.use(cors());
@@ -19,10 +19,10 @@ app.use(cors());
 // Serve static files from the public directory
 app.use(express.static('public'));
 
-// Middleware to parse JSON
-app.use(express.json());
+// Middleware to parse JSON with increased size limit
+app.use(express.json({ limit: '10mb' }));
 
-// Configure multer for file uploads
+// Configure multer for file uploads with proper limits
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Ensure the directory exists
@@ -44,7 +44,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 2 * 1024 * 1024 // 2MB limit
+    fileSize: 10 * 1024 * 1024 // Increased to 10MB limit
   },
   fileFilter: (req, file, cb) => {
     // Accept only image files
@@ -259,11 +259,28 @@ app.post('/api/accidents/restore', (req, res) => {
   }
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor backend corriendo en http://localhost:${PORT}`);
-  console.log(`📁 Directorio de imágenes: public/images/`);
-  console.log(`📄 Archivo de datos: ${accidentsFilePath}`);
-});
+// Start the server with better error handling
+const startServer = (port) => {
+  const server = app.listen(port, () => {
+    console.log(`🚀 Servidor backend corriendo en http://localhost:${port}`);
+    console.log(`📁 Directorio de imágenes: public/images/`);
+    console.log(`📄 Archivo de datos: ${accidentsFilePath}`);
+  });
+
+  // Handle server errors
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.log(`Puerto ${port} está en uso, intentando con el puerto ${port + 1}...`);
+      setTimeout(() => {
+        server.close();
+        startServer(port + 1);
+      }, 1000);
+    } else {
+      console.error('Error del servidor:', error);
+    }
+  });
+};
+
+startServer(PORT);
 
 export default app;
