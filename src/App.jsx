@@ -19,15 +19,21 @@ function App() {
   const getApiBaseUrl = () => {
     // In development, use localhost with the correct port
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      // For PHP backend, you might use something like:
-      // return 'http://localhost/tetela-radar/api';
-      return 'http://localhost:3004'; // Node.js backend
+      return 'http://localhost:3004'; // Node.js backend for local development
     }
     
-    // For production with PHP backend
-    // Update this to point to your PHP backend URL
-    // Example: return 'https://yourdomain.com/api';
-    return 'https://your-php-backend-url.com/api'; // Update with your actual PHP backend URL
+    // For production, you need to deploy your backend and update this URL
+    // Examples of what you should replace it with:
+    // For PHP backend on 000webhost: return 'https://your-actual-site.000webhostapp.com/api';
+    // For Node.js backend on Render: return 'https://your-app-name.onrender.com';
+    // For PHP backend on InfinityFree: return 'https://your-username.infinityfreeapp.com/api';
+    
+    // IMPORTANT: Replace this placeholder with your actual deployed backend URL
+    console.warn('⚠️ Backend API URL not configured for production');
+    console.warn('📄 File to update: src/App.jsx');
+    console.warn('📝 Location: getApiBaseUrl() function, line ~25');
+    console.warn('🔧 Action: Replace the return value with your actual backend URL');
+    return null; // No backend available - this is why data saving doesn't work
   };
 
   const apiBaseUrl = getApiBaseUrl();
@@ -99,18 +105,28 @@ function App() {
             return false;
           }
         } else {
-          throw new Error(`API request failed: ${response.status}`);
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
         }
       } else {
         // No backend available
-        const errorMessage = 'No se puede guardar datos en este entorno. Para guardar datos, ejecute la aplicación localmente con el servidor backend o implemente un servicio backend externo.';
+        const errorMessage = 'No se puede guardar datos en este entorno. Para guardar datos, debe implementar un servicio backend externo y configurar la URL en src/App.jsx';
         console.log(errorMessage);
         alert(errorMessage);
         return false;
       }
     } catch (error) {
       console.error('Error adding accident:', error);
-      alert(`Error al conectar con el servidor para guardar el incidente: ${error.message}`);
+      // Provide more specific error message
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        alert(`Error de conexión: No se puede conectar con el servidor backend. Verifique que:
+1. Ha desplegado su backend
+2. Ha actualizado la URL en src/App.jsx
+3. La URL es correcta y accesible
+
+Error detallado: ${error.message}`);
+      } else {
+        alert(`Error al conectar con el servidor para guardar el incidente: ${error.message}`);
+      }
       return false;
     }
   };
