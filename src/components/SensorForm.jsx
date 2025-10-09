@@ -22,10 +22,12 @@ const SensorForm = ({ onAddSensor }) => {
   const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log('Form field changed:', name, value);
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -43,6 +45,7 @@ const SensorForm = ({ onAddSensor }) => {
   // Handle checkbox for using current location
   const handleLocationCheckboxChange = (e) => {
     const checked = e.target.checked;
+    console.log('Location checkbox changed:', checked);
     setUseCurrentLocation(checked);
     
     // If checkbox is checked, try to get current location
@@ -51,6 +54,7 @@ const SensorForm = ({ onAddSensor }) => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
+            console.log('Location obtained:', latitude, longitude);
             setFormData(prev => ({
               ...prev,
               coordinates: [longitude.toString(), latitude.toString()]
@@ -77,27 +81,34 @@ const SensorForm = ({ onAddSensor }) => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+    console.log('Image file selected:', file);
+    
     if (file) {
       // Check if file is an image
       if (!file.type.match('image.*')) {
+        const errorMsg = 'Por favor seleccione un archivo de imagen válido (JPEG, PNG, GIF)';
+        console.error('Invalid file type:', file.type);
         setErrors(prev => ({
           ...prev,
-          image: 'Por favor seleccione un archivo de imagen válido (JPEG, PNG, GIF)'
+          image: errorMsg
         }));
         return;
       }
       
       // Check file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
+        const errorMsg = 'La imagen debe ser menor a 2MB. Tamaño actual: ' + (file.size / (1024 * 1024)).toFixed(2) + 'MB';
+        console.error('File too large:', file.size);
         setErrors(prev => ({
           ...prev,
-          image: 'La imagen debe ser menor a 2MB. Tamaño actual: ' + (file.size / (1024 * 1024)).toFixed(2) + 'MB'
+          image: errorMsg
         }));
         return;
       }
       
       setImage(file);
       setPreview(URL.createObjectURL(file));
+      console.log('Image preview created');
       
       // Clear image error if valid
       if (errors.image) {
@@ -111,6 +122,7 @@ const SensorForm = ({ onAddSensor }) => {
 
   const validateForm = () => {
     const newErrors = {};
+    console.log('Validating form data:', formData);
     
     // Validate accident fields
     if (!formData.incidentName.trim()) {
@@ -155,18 +167,24 @@ const SensorForm = ({ onAddSensor }) => {
       }
     }
     
+    console.log('Validation errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submission started');
     
     // Validate form
     if (!validateForm()) {
-      alert('Por favor corrija los errores en el formulario');
+      const errorMsg = 'Por favor corrija los errores en el formulario';
+      console.error(errorMsg);
+      alert(errorMsg);
       return;
     }
+    
+    setIsSubmitting(true);
     
     // Create a new accident object
     const newAccident = {
@@ -183,34 +201,36 @@ const SensorForm = ({ onAddSensor }) => {
       brigada_asignada: formData.assignedTeam,
       imagenes: []
     };
+    
+    console.log('Created accident object:', newAccident);
 
     // Handle image upload
     if (image) {
       try {
-        setIsUploading(true);
-        
-        // Upload image to Cloudinary (with fallback)
+        console.log('Uploading image to Cloudinary');
         const imageData = await uploadImageToCloudinary(image);
+        console.log('Image upload result:', imageData);
         
         if (imageData.success) {
           // Add image URL to data
           newAccident.imagenes = [imageData.url];
           alert('Imagen guardada exitosamente');
         } else {
-          console.error('Error uploading image:', imageData.error);
-          alert('Error al guardar la imagen: ' + imageData.error);
+          const errorMsg = imageData.error || 'Error desconocido al guardar la imagen';
+          console.error('Image upload failed:', errorMsg);
+          alert('Error al guardar la imagen: ' + errorMsg);
         }
       } catch (error) {
         console.error('Error uploading image:', error);
         alert('Error al conectar con el servidor para guardar la imagen: ' + error.message);
-      } finally {
-        setIsUploading(false);
       }
     }
 
     // Call the parent function to add the data
     try {
-      const success = await onAddSensor(newAccident, 'accident');
+      console.log('Calling onAddSensor with:', newAccident);
+      const success = await onAddSensor(newAccident);
+      console.log('onAddSensor result:', success);
       
       if (success) {
         // Reset form
@@ -236,11 +256,15 @@ const SensorForm = ({ onAddSensor }) => {
         // Show success message
         alert('Reporte de incidente agregado exitosamente!');
       } else {
-        alert('Error al agregar los datos. Por favor intente nuevamente.');
+        const errorMsg = 'Error al agregar los datos. Por favor intente nuevamente.';
+        console.error(errorMsg);
+        alert(errorMsg);
       }
     } catch (error) {
       console.error('Error adding data:', error);
       alert('Error al agregar los datos. Por favor intente nuevamente.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -277,7 +301,7 @@ const SensorForm = ({ onAddSensor }) => {
           🌪️ Reportar Incidente por Huracán
         </h2>
         
-        {isUploading && (
+        {isSubmitting && (
           <div style={{
             textAlign: 'center',
             padding: '15px',
@@ -285,7 +309,7 @@ const SensorForm = ({ onAddSensor }) => {
             borderRadius: '8px',
             marginBottom: '20px'
           }}>
-            <p>📤 Subiendo imagen... Por favor espere</p>
+            <p>📤 Guardando incidente... Por favor espere</p>
           </div>
         )}
         
@@ -870,7 +894,7 @@ const SensorForm = ({ onAddSensor }) => {
               name="image"
               accept="image/*"
               onChange={handleImageChange}
-              disabled={isUploading}
+              disabled={isSubmitting}
               style={{
                 width: '100%',
                 padding: '14px',
@@ -881,7 +905,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px',
                 transition: 'border-color 0.3s',
                 boxSizing: 'border-box',
-                cursor: isUploading ? 'not-allowed' : 'pointer'
+                cursor: isSubmitting ? 'not-allowed' : 'pointer'
               }}
             />
             {errors.image && (
@@ -957,14 +981,14 @@ const SensorForm = ({ onAddSensor }) => {
           }}>
             <button 
               type="submit" 
-              disabled={isUploading}
+              disabled={isSubmitting}
               style={{
-                backgroundColor: isUploading ? '#6c757d' : '#007bff',
+                backgroundColor: isSubmitting ? '#6c757d' : '#007bff',
                 color: 'white',
                 padding: '14px 28px',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: isUploading ? 'not-allowed' : 'pointer',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
                 fontSize: '18px',
                 fontWeight: '600',
                 boxShadow: '0 4px 6px rgba(0,123,255,0.3)',
@@ -973,17 +997,17 @@ const SensorForm = ({ onAddSensor }) => {
                 marginRight: '10px'
               }}
               onMouseOver={(e) => {
-                if (!isUploading) {
+                if (!isSubmitting) {
                   e.target.style.transform = 'translateY(-2px)';
                 }
               }}
               onMouseOut={(e) => {
-                if (!isUploading) {
+                if (!isSubmitting) {
                   e.target.style.transform = 'translateY(0)';
                 }
               }}
             >
-              {isUploading ? '📤 Subiendo...' : '🌪️ Reportar'}
+              {isSubmitting ? '📤 Guardando...' : '🌪️ Reportar'}
             </button>
             <button 
               type="button" 

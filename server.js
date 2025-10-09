@@ -25,12 +25,19 @@ app.use(express.json());
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'public/images/');
+    // Ensure the directory exists
+    const dir = 'public/images';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
   },
   filename: (req, file, cb) => {
     // Generate unique filename
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'accident-' + uniqueSuffix + path.extname(file.originalname));
+    const filename = 'accident-' + uniqueSuffix + path.extname(file.originalname);
+    console.log('Generated filename:', filename);
+    cb(null, filename);
   }
 });
 
@@ -42,8 +49,10 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     // Accept only image files
     if (file.mimetype.startsWith('image/')) {
+      console.log('File accepted:', file.originalname);
       cb(null, true);
     } else {
+      console.log('File rejected:', file.originalname);
       cb(new Error('Solo se permiten archivos de imagen'));
     }
   }
@@ -55,8 +64,16 @@ const accidentsFilePath = path.join(__dirname, 'src/data/accidents.json');
 // Helper function to read accidents data
 const readAccidentsData = () => {
   try {
-    const data = fs.readFileSync(accidentsFilePath, 'utf8');
-    return JSON.parse(data);
+    console.log('Reading accidents data from:', accidentsFilePath);
+    if (fs.existsSync(accidentsFilePath)) {
+      const data = fs.readFileSync(accidentsFilePath, 'utf8');
+      const parsedData = JSON.parse(data);
+      console.log('Successfully read', parsedData.length, 'accidents');
+      return parsedData;
+    } else {
+      console.log('Accidents file not found, returning empty array');
+      return [];
+    }
   } catch (error) {
     console.error('Error reading accidents data:', error);
     return [];
@@ -66,7 +83,17 @@ const readAccidentsData = () => {
 // Helper function to write accidents data
 const writeAccidentsData = (data) => {
   try {
+    console.log('Writing accidents data to:', accidentsFilePath);
+    console.log('Data to write:', JSON.stringify(data, null, 2));
+    
+    // Ensure directory exists
+    const dir = path.dirname(accidentsFilePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
     fs.writeFileSync(accidentsFilePath, JSON.stringify(data, null, 2));
+    console.log('Successfully wrote accidents data');
     return true;
   } catch (error) {
     console.error('Error writing accidents data:', error);
@@ -77,13 +104,18 @@ const writeAccidentsData = (data) => {
 // Route for uploading images
 app.post('/api/upload', upload.single('image'), (req, res) => {
   try {
+    console.log('Image upload request received');
+    
     if (!req.file) {
+      console.log('No file uploaded');
       return res.status(400).json({ 
         success: false, 
         error: 'No se ha seleccionado ningún archivo' 
       });
     }
 
+    console.log('File uploaded successfully:', req.file);
+    
     // Return success response with file information
     res.json({
       success: true,
@@ -92,6 +124,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
       message: 'Imagen guardada exitosamente'
     });
   } catch (error) {
+    console.error('Error in image upload:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -102,9 +135,12 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 // Route for getting accidents data
 app.get('/api/accidents', (req, res) => {
   try {
+    console.log('GET /api/accidents request received');
     const accidents = readAccidentsData();
+    console.log('Sending', accidents.length, 'accidents');
     res.json(accidents);
   } catch (error) {
+    console.error('Error in GET /api/accidents:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Error al leer los datos de incidentes' 
@@ -115,29 +151,37 @@ app.get('/api/accidents', (req, res) => {
 // Route for adding new accidents
 app.post('/api/accidents', (req, res) => {
   try {
+    console.log('POST /api/accidents request received');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const newAccident = req.body;
     
     // Read existing accidents
     const accidents = readAccidentsData();
+    console.log('Current accidents count:', accidents.length);
     
     // Add new accident
     accidents.push(newAccident);
+    console.log('New accidents count:', accidents.length);
     
     // Save updated accidents data
     const success = writeAccidentsData(accidents);
     
     if (success) {
+      console.log('Accident saved successfully');
       res.json({ 
         success: true, 
         message: 'Incidente guardado exitosamente' 
       });
     } else {
+      console.error('Failed to save accident data');
       res.status(500).json({ 
         success: false, 
         error: 'Error al guardar el incidente' 
       });
     }
   } catch (error) {
+    console.error('Error in POST /api/accidents:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -148,6 +192,8 @@ app.post('/api/accidents', (req, res) => {
 // Route for restoring initial data
 app.post('/api/accidents/restore', (req, res) => {
   try {
+    console.log('POST /api/accidents/restore request received');
+    
     // Read initial data from a backup file or hardcoded data
     const initialData = [
       {
@@ -192,17 +238,20 @@ app.post('/api/accidents/restore', (req, res) => {
     const success = writeAccidentsData(initialData);
     
     if (success) {
+      console.log('Initial data restored successfully');
       res.json({ 
         success: true, 
         message: 'Datos iniciales restaurados exitosamente' 
       });
     } else {
+      console.error('Failed to restore initial data');
       res.status(500).json({ 
         success: false, 
         error: 'Error al restaurar los datos iniciales' 
       });
     }
   } catch (error) {
+    console.error('Error in POST /api/accidents/restore:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -214,6 +263,7 @@ app.post('/api/accidents/restore', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor backend corriendo en http://localhost:${PORT}`);
   console.log(`📁 Directorio de imágenes: public/images/`);
+  console.log(`📄 Archivo de datos: ${accidentsFilePath}`);
 });
 
 export default app;

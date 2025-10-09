@@ -21,46 +21,41 @@ function App() {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:3004';
     }
-    // In production, we'll use a more persistent storage approach
+    // In production, we'll still try to use the API if possible
+    // But for Vercel static deployment, this will be null
     return null;
   };
 
   const apiBaseUrl = getApiBaseUrl();
 
-  // Load accidents from backend API or session storage/fallback
+  // Load accidents from backend API only (no localStorage fallback)
   useEffect(() => {
     const fetchAccidents = async () => {
       try {
-        // Try to fetch from API first (only in development)
+        // Try to fetch from API
         if (apiBaseUrl) {
+          console.log('Fetching accidents from API:', `${apiBaseUrl}/api/accidents`);
           const response = await fetch(`${apiBaseUrl}/api/accidents`);
+          console.log('API response status:', response.status);
+          
           if (response.ok) {
             const data = await response.json();
+            console.log('Accidents data received:', data);
             setAccidents(data);
             return;
+          } else {
+            console.error('API request failed with status:', response.status);
+            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
           }
         }
         
-        // Try multiple storage options
-        // 1. Check sessionStorage
-        const sessionAccidents = sessionStorage.getItem('tetela-accidents');
-        if (sessionAccidents) {
-          setAccidents(JSON.parse(sessionAccidents));
-          return;
-        }
-        
-        // 2. Check localStorage (in case it still exists)
-        const localAccidents = localStorage.getItem('tetela-accidents');
-        if (localAccidents) {
-          setAccidents(JSON.parse(localAccidents));
-          return;
-        }
-        
-        // 3. Fallback to initial data
+        // If no API URL, use initial data (for cases where API is not available)
+        console.log('Using initial data as fallback');
         setAccidents(initialAccidentsData);
       } catch (error) {
         console.error('Error fetching accidents:', error);
-        // Final fallback to initial data
+        alert(`Error al cargar los datos: ${error.message}`);
+        // Fallback to initial data
         setAccidents(initialAccidentsData);
       }
     };
@@ -68,24 +63,13 @@ function App() {
     fetchAccidents();
   }, []);
 
-  // Save accidents to both sessionStorage and localStorage for redundancy
-  useEffect(() => {
-    if (accidents.length > 0 && !apiBaseUrl) {
-      try {
-        // Save to sessionStorage (less likely to be cleared)
-        sessionStorage.setItem('tetela-accidents', JSON.stringify(accidents));
-        // Also save to localStorage as backup
-        localStorage.setItem('tetela-accidents-backup', JSON.stringify(accidents));
-      } catch (error) {
-        console.error('Error saving accidents to storage:', error);
-      }
-    }
-  }, [accidents, apiBaseUrl]);
-
   const handleAddAccident = async (newAccident) => {
     try {
-      // Try to save to backend API (only in development)
+      console.log('Attempting to save accident:', newAccident);
+      
+      // Try to save to backend API
       if (apiBaseUrl) {
+        console.log('Sending request to API:', `${apiBaseUrl}/api/accidents`);
         const response = await fetch(`${apiBaseUrl}/api/accidents`, {
           method: 'POST',
           headers: {
@@ -94,55 +78,41 @@ function App() {
           body: JSON.stringify(newAccident),
         });
         
-        const result = await response.json();
+        console.log('API response status:', response.status);
         
-        if (result.success) {
-          // Update state with new accident
-          setAccidents(prevAccidents => [...prevAccidents, newAccident]);
-          setShowForm(false); // Close form after successful submission
-          return true;
+        if (response.ok) {
+          const result = await response.json();
+          console.log('API response data:', result);
+          
+          if (result.success) {
+            // Update state with new accident
+            setAccidents(prevAccidents => [...prevAccidents, newAccident]);
+            setShowForm(false); // Close form after successful submission
+            alert('Reporte de incidente agregado exitosamente!');
+            return true;
+          } else {
+            const errorMessage = result.error || 'Error desconocido al guardar el incidente';
+            console.error('API returned error:', errorMessage);
+            alert(`Error al guardar el incidente: ${errorMessage}`);
+            return false;
+          }
         } else {
-          alert('Error al guardar el incidente: ' + result.error);
+          const errorText = await response.text();
+          console.error('API request failed:', response.status, errorText);
+          alert(`Error al conectar con el servidor: ${response.status} ${response.statusText}\n${errorText}`);
           return false;
         }
       } else {
-        // In production (Vercel), save to storage
-        const updatedAccidents = [...accidents, newAccident];
-        setAccidents(updatedAccidents);
-        setShowForm(false); // Close form after successful submission
-        
-        // Save to both storage mechanisms
-        try {
-          sessionStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
-          localStorage.setItem('tetela-accidents-backup', JSON.stringify(updatedAccidents));
-        } catch (error) {
-          console.error('Error saving to storage:', error);
-        }
-        
-        return true;
+        // No API available - show error
+        const errorMessage = 'No se puede conectar con el servidor. La aplicación está en modo de solo lectura.';
+        console.error(errorMessage);
+        alert(errorMessage);
+        return false;
       }
     } catch (error) {
       console.error('Error adding accident:', error);
-      
-      // In production, just add to local state
-      if (!apiBaseUrl) {
-        const updatedAccidents = [...accidents, newAccident];
-        setAccidents(updatedAccidents);
-        setShowForm(false); // Close form after successful submission
-        
-        // Save to both storage mechanisms
-        try {
-          sessionStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
-          localStorage.setItem('tetela-accidents-backup', JSON.stringify(updatedAccidents));
-        } catch (storageError) {
-          console.error('Error saving to storage:', storageError);
-        }
-        
-        return true;
-      } else {
-        alert('Error al conectar con el servidor para guardar el incidente');
-        return false;
-      }
+      alert(`Error al conectar con el servidor para guardar el incidente: ${error.message}`);
+      return false;
     }
   };
 
@@ -155,48 +125,41 @@ function App() {
   const handleRestoreInitialData = async () => {
     if (window.confirm('¿Está seguro de que desea restaurar los datos iniciales? Esto eliminará todos los incidentes agregados.')) {
       try {
-        // Try to restore via backend API (only in development)
+        // Try to restore via backend API
         if (apiBaseUrl) {
+          console.log('Sending restore request to API:', `${apiBaseUrl}/api/accidents/restore`);
           const response = await fetch(`${apiBaseUrl}/api/accidents/restore`, {
             method: 'POST',
           });
           
-          const result = await response.json();
+          console.log('Restore API response status:', response.status);
           
-          if (result.success) {
-            setAccidents(initialAccidentsData);
-            alert('Datos iniciales restaurados exitosamente.');
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Restore API response data:', result);
+            
+            if (result.success) {
+              setAccidents(initialAccidentsData);
+              alert('Datos iniciales restaurados exitosamente.');
+            } else {
+              const errorMessage = result.error || 'Error desconocido al restaurar los datos';
+              console.error('API returned error:', errorMessage);
+              alert(`Error al restaurar los datos: ${errorMessage}`);
+            }
           } else {
-            throw new Error(result.error);
+            const errorText = await response.text();
+            console.error('Restore API request failed:', response.status, errorText);
+            alert(`Error al conectar con el servidor: ${response.status} ${response.statusText}\n${errorText}`);
           }
         } else {
-          // In production (Vercel), restore from initial data
-          setAccidents(initialAccidentsData);
-          
-          // Save to both storage mechanisms
-          try {
-            sessionStorage.setItem('tetela-accidents', JSON.stringify(initialAccidentsData));
-            localStorage.setItem('tetela-accidents-backup', JSON.stringify(initialAccidentsData));
-          } catch (error) {
-            console.error('Error saving to storage:', error);
-          }
-          
-          alert('Datos iniciales restaurados exitosamente.');
+          // No API available - show error
+          const errorMessage = 'No se puede conectar con el servidor para restaurar los datos.';
+          console.error(errorMessage);
+          alert(errorMessage);
         }
       } catch (error) {
         console.error('Error restoring initial data:', error);
-        // Fallback to client-side restore
-        setAccidents(initialAccidentsData);
-        
-        // Save to both storage mechanisms
-        try {
-          sessionStorage.setItem('tetela-accidents', JSON.stringify(initialAccidentsData));
-          localStorage.setItem('tetela-accidents-backup', JSON.stringify(initialAccidentsData));
-        } catch (storageError) {
-          console.error('Error saving to storage:', storageError);
-        }
-        
-        alert('Datos iniciales restaurados exitosamente.');
+        alert(`Error al conectar con el servidor para restaurar los datos: ${error.message}`);
       }
     }
   };
@@ -225,17 +188,6 @@ function App() {
         const data = JSON.parse(e.target.result);
         if (Array.isArray(data)) {
           setAccidents(data);
-          
-          // Save to storage
-          if (!apiBaseUrl) {
-            try {
-              sessionStorage.setItem('tetela-accidents', JSON.stringify(data));
-              localStorage.setItem('tetela-accidents-backup', JSON.stringify(data));
-            } catch (error) {
-              console.error('Error saving imported data:', error);
-            }
-          }
-          
           alert('Datos importados exitosamente!');
         } else {
           alert('Formato de archivo inválido. Debe ser un arreglo JSON.');

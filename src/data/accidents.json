@@ -34,24 +34,6 @@
     "brigada_asignada": "Brigada de Rescate 2",
     "imagenes": [],
     "type": "accident"
-  },
-  {
-    "id": 3188,
-    "nombre": "CASA ININDADA",
-    "municipio": "Tetela de Ocampo",
-    "fecha": "2025-10-09",
-    "hora": "03:01",
-    "tipo": "Inundación",
-    "descripcion": "MI CASA SE INUNDO ",
-    "coordenadas": [
-      -97.80671176551684,
-      19.81820394486863
-    ],
-    "nivel_riesgo": "medium",
-    "afectados": 4,
-    "brigada_asignada": "Montañeses",
-    "imagenes": [
-      "sensor-1760030454155-163436595.jpg"
-    ]
   }
+  
 ]
