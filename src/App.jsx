@@ -6,6 +6,9 @@ import MapComponent from './components/MapComponent';
 import SensorForm from './components/SensorForm';
 import './App.css';
 
+// Import initial data as fallback
+import initialAccidentsData from './data/accidents.json';
+
 function App() {
   const [accidents, setAccidents] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
@@ -18,17 +21,17 @@ function App() {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:3004';
     }
-    // In production (Vercel), use relative paths for static data
-    return '';
+    // In production, we'll use localStorage as fallback since Vercel is static
+    return null;
   };
 
   const apiBaseUrl = getApiBaseUrl();
 
-  // Load accidents from backend API or local data
+  // Load accidents from backend API or localStorage/fallback
   useEffect(() => {
     const fetchAccidents = async () => {
       try {
-        // Try to fetch from API first
+        // Try to fetch from API first (only in development)
         if (apiBaseUrl) {
           const response = await fetch(`${apiBaseUrl}/api/accidents`);
           if (response.ok) {
@@ -37,25 +40,48 @@ function App() {
             return;
           }
         }
-        // Fallback to local data if API fails or in production
-        import('./data/accidents.json').then((accidentsData) => {
-          setAccidents(accidentsData.default);
-        });
+        
+        // Fallback to localStorage or initial data
+        const savedAccidents = localStorage.getItem('tetela-accidents');
+        if (savedAccidents) {
+          setAccidents(JSON.parse(savedAccidents));
+        } else {
+          setAccidents(initialAccidentsData);
+        }
       } catch (error) {
         console.error('Error fetching accidents:', error);
-        // Final fallback to local data
-        import('./data/accidents.json').then((accidentsData) => {
-          setAccidents(accidentsData.default);
-        });
+        // Final fallback to localStorage or initial data
+        try {
+          const savedAccidents = localStorage.getItem('tetela-accidents');
+          if (savedAccidents) {
+            setAccidents(JSON.parse(savedAccidents));
+          } else {
+            setAccidents(initialAccidentsData);
+          }
+        } catch (storageError) {
+          console.error('Error accessing localStorage:', storageError);
+          setAccidents(initialAccidentsData);
+        }
       }
     };
 
     fetchAccidents();
   }, []);
 
+  // Save accidents to localStorage whenever they change (for Vercel deployment)
+  useEffect(() => {
+    if (accidents.length > 0 && !apiBaseUrl) {
+      try {
+        localStorage.setItem('tetela-accidents', JSON.stringify(accidents));
+      } catch (error) {
+        console.error('Error saving accidents to localStorage:', error);
+      }
+    }
+  }, [accidents, apiBaseUrl]);
+
   const handleAddAccident = async (newAccident) => {
     try {
-      // Only try to save to backend in development
+      // Try to save to backend API (only in development)
       if (apiBaseUrl) {
         const response = await fetch(`${apiBaseUrl}/api/accidents`, {
           method: 'POST',
@@ -77,17 +103,34 @@ function App() {
           return false;
         }
       } else {
-        // In production (Vercel), just add to local state
+        // In production (Vercel), save to localStorage
         setAccidents(prevAccidents => [...prevAccidents, newAccident]);
         setShowForm(false); // Close form after successful submission
+        
+        // Save to localStorage
+        try {
+          localStorage.setItem('tetela-accidents', JSON.stringify([...accidents, newAccident]));
+        } catch (error) {
+          console.error('Error saving to localStorage:', error);
+        }
+        
         return true;
       }
     } catch (error) {
       console.error('Error adding accident:', error);
+      
       // In production, just add to local state
       if (!apiBaseUrl) {
         setAccidents(prevAccidents => [...prevAccidents, newAccident]);
         setShowForm(false); // Close form after successful submission
+        
+        // Save to localStorage
+        try {
+          localStorage.setItem('tetela-accidents', JSON.stringify([...accidents, newAccident]));
+        } catch (storageError) {
+          console.error('Error saving to localStorage:', storageError);
+        }
+        
         return true;
       } else {
         alert('Error al conectar con el servidor para guardar el incidente');
@@ -102,14 +145,50 @@ function App() {
   };
 
   // Function to restore initial data
-  const handleRestoreInitialData = () => {
+  const handleRestoreInitialData = async () => {
     if (window.confirm('¿Está seguro de que desea restaurar los datos iniciales? Esto eliminará todos los incidentes agregados.')) {
-      // In a real app, you would call a backend endpoint to restore data
-      // For now, we'll just reload the initial data
-      import('./data/accidents.json').then((accidentsData) => {
-        setAccidents(accidentsData.default);
+      try {
+        // Try to restore via backend API (only in development)
+        if (apiBaseUrl) {
+          const response = await fetch(`${apiBaseUrl}/api/accidents/restore`, {
+            method: 'POST',
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            setAccidents(initialAccidentsData);
+            alert('Datos iniciales restaurados exitosamente.');
+          } else {
+            throw new Error(result.error);
+          }
+        } else {
+          // In production (Vercel), restore from initial data
+          setAccidents(initialAccidentsData);
+          
+          // Save to localStorage
+          try {
+            localStorage.setItem('tetela-accidents', JSON.stringify(initialAccidentsData));
+          } catch (error) {
+            console.error('Error saving to localStorage:', error);
+          }
+          
+          alert('Datos iniciales restaurados exitosamente.');
+        }
+      } catch (error) {
+        console.error('Error restoring initial data:', error);
+        // Fallback to client-side restore
+        setAccidents(initialAccidentsData);
+        
+        // Save to localStorage
+        try {
+          localStorage.setItem('tetela-accidents', JSON.stringify(initialAccidentsData));
+        } catch (storageError) {
+          console.error('Error saving to localStorage:', storageError);
+        }
+        
         alert('Datos iniciales restaurados exitosamente.');
-      });
+      }
     }
   };
 
