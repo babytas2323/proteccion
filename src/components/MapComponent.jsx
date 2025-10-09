@@ -134,17 +134,24 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
     return new Date(dateString).toLocaleDateString('es-ES', options);
   };
 
-  // Function to get image path based on environment
+  // Function to get image path based on environment and image type
   const getImagePath = (imgPath) => {
     // If it's already an absolute URL or Base64 data URL, return as is
     if (imgPath.startsWith('http') || imgPath.startsWith('data:')) {
       return imgPath;
     }
     
-    // For Vercel deployment, images are in the dist/images directory
+    // For relative paths, we need to handle them correctly
+    // Remove leading slash if present
+    let cleanPath = imgPath;
+    if (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.substring(1);
+    }
+    
+    // For Vercel deployment, images should be in the root or images directory
     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      // Remove leading slash if present and prepend with images/
-      return imgPath.startsWith('/') ? `images${imgPath}` : `images/${imgPath}`;
+      // Try different possible paths for Vercel deployment
+      return cleanPath;
     }
     
     // For local development, keep the original path
@@ -408,6 +415,11 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
                         key={index}
                         src={getImagePath(img)} 
                         alt={`Incidente ${index + 1}`} 
+                        onError={(e) => {
+                          // Handle image loading errors
+                          console.error('Failed to load image:', img);
+                          e.target.style.display = 'none';
+                        }}
                         style={{ 
                           width: '100%', 
                           maxHeight: '150px', 
