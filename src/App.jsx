@@ -17,13 +17,13 @@ function App() {
 
   // Determine the base URL for API calls
   const getApiBaseUrl = () => {
-    // In development, use localhost
+    // Always try to use localhost in development
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:3004';
     }
-    // In production, we'll still try to use the API if possible
-    // But for Vercel static deployment, this will be null
-    return null;
+    // For production/deployment, still try to connect to the backend
+    // This will help us see the actual connection errors
+    return 'http://localhost:3004';
   };
 
   const apiBaseUrl = getApiBaseUrl();
@@ -44,14 +44,11 @@ function App() {
             setAccidents(data);
             return;
           } else {
-            console.error('API request failed with status:', response.status);
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('API request failed with status:', response.status, 'Response:', errorText);
+            throw new Error(`API request failed: ${response.status} ${response.statusText}\nResponse: ${errorText}`);
           }
         }
-        
-        // If no API URL, use initial data (for cases where API is not available)
-        console.log('Using initial data as fallback');
-        setAccidents(initialAccidentsData);
       } catch (error) {
         console.error('Error fetching accidents:', error);
         alert(`Error al cargar los datos: ${error.message}`);
@@ -102,12 +99,6 @@ function App() {
           alert(`Error al conectar con el servidor: ${response.status} ${response.statusText}\n${errorText}`);
           return false;
         }
-      } else {
-        // No API available - show error
-        const errorMessage = 'No se puede conectar con el servidor. La aplicación está en modo de solo lectura.';
-        console.error(errorMessage);
-        alert(errorMessage);
-        return false;
       }
     } catch (error) {
       console.error('Error adding accident:', error);
@@ -151,11 +142,6 @@ function App() {
             console.error('Restore API request failed:', response.status, errorText);
             alert(`Error al conectar con el servidor: ${response.status} ${response.statusText}\n${errorText}`);
           }
-        } else {
-          // No API available - show error
-          const errorMessage = 'No se puede conectar con el servidor para restaurar los datos.';
-          console.error(errorMessage);
-          alert(errorMessage);
         }
       } catch (error) {
         console.error('Error restoring initial data:', error);
