@@ -128,6 +128,27 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
     }
   };
 
+  // Function to get risk level text
+  const getRiskLevelText = (riskLevel) => {
+    // Normalize risk level values
+    const normalizedRiskLevel = riskLevel ? riskLevel.toString().toLowerCase() : 'low';
+    let level = normalizedRiskLevel;
+    if (normalizedRiskLevel.includes('bajo') || normalizedRiskLevel.includes('low')) {
+      level = 'low';
+    } else if (normalizedRiskLevel.includes('medio') || normalizedRiskLevel.includes('medium')) {
+      level = 'medium';
+    } else if (normalizedRiskLevel.includes('alto') || normalizedRiskLevel.includes('high') || normalizedRiskLevel.includes('crítico')) {
+      level = 'high';
+    }
+    
+    switch (level) {
+      case 'low': return 'BAJO';
+      case 'medium': return 'MEDIO';
+      case 'high': return 'ALTO';
+      default: return 'BAJO';
+    }
+  };
+
   // Function to format date
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -383,8 +404,7 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
                     borderRadius: '12px',
                     backgroundColor: `${getMarkerColor(point.nivel_riesgo || point.riskLevel)}20`
                   }}>
-                    {point.nivel_riesgo === 'bajo' || point.nivel_riesgo === 'Bajo' || point.riskLevel === 'low' ? 'BAJO' : 
-                     point.nivel_riesgo === 'medio' || point.nivel_riesgo === 'Medio' || point.riskLevel === 'medium' ? 'MEDIO' : 'ALTO'}
+                    {getRiskLevelText(point.nivel_riesgo || point.riskLevel)}
                   </span>
                 </div>
                 

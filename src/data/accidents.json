@@ -1,55 +1,20 @@
 [
   {
-    "id": 1,
-    "nombre": "Huracán Patricia",
-    "municipio": "Tetela de Ocampo",
-    "fecha": "2023-10-23",
-    "hora": "14:30",
-    "tipo": "Huracán",
-    "descripcion": "Fuertes vientos y lluvias intensas afectaron la región",
-    "coordenadas": [
-      -97.8096,
-      19.8116
-    ],
-    "nivel_riesgo": "high",
-    "afectados": 15,
-    "brigada_asignada": "Brigada de Emergencia 1",
-    "imagenes": [],
-    "type": "accident"
-  },
-  {
-    "id": 2,
-    "nombre": "Inundación por tormenta",
-    "municipio": "Tetela de Ocampo",
-    "fecha": "2023-09-15",
-    "hora": "08:45",
-    "tipo": "Inundación",
-    "descripcion": "Inundación en la calle principal por tormenta severa",
-    "coordenadas": [
-      -97.815,
-      19.808
-    ],
-    "nivel_riesgo": "medium",
-    "afectados": 8,
-    "brigada_asignada": "Brigada de Rescate 2",
-    "imagenes": [],
-    "type": "accident"
-  },
-  {
-    "nombre": "el rio",
+    "nombre": "el tepeyac",
     "municipio": "Tetela de Ocampo",
     "fecha": "2025-10-09",
-    "hora": "03:02",
+    "hora": "02:00",
     "tipo": "Inundación",
-    "descripcion": "fsafdsafd",
+    "descripcion": "dgdsgfd",
     "coordenadas": [
       -97.80661555852463,
       19.818159037482747
     ],
-    "nivel_riesgo": "high",
-    "afectados": 5,
-    "brigada_asignada": "el ocotal",
-    "id": 1760049719373,
-    "createdAt": "2025-10-09T22:41:59.373Z"
+    "nivel_riesgo": "Alto",
+    "afectados": 4,
+    "localidad": "tepezintla",
+    "telefono": "7761125973",
+    "id": 1760055442200,
+    "createdAt": "2025-10-10T00:17:22.200Z"
   }
 ]

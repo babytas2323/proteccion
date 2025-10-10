@@ -6,6 +6,9 @@ import MapComponent from './components/MapComponent';
 import SensorForm from './components/SensorForm';
 import './App.css';
 
+// Import xlsx library for Excel export
+import * as XLSX from 'xlsx';
+
 // Import initial data as fallback
 import initialAccidentsData from './data/accidents.json';
 
@@ -16,6 +19,35 @@ function App() {
   const [showForm, setShowForm] = useState(false);
   const [backendAvailable, setBackendAvailable] = useState(false);
   const [apiBaseUrl] = useState('http://localhost:3004');
+  const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
+
+  // Function to get risk level from accident data
+  const getRiskLevel = (accident) => {
+    const riskLevel = accident.nivel_riesgo || accident.riskLevel;
+    if (!riskLevel) return 'low';
+    
+    const normalizedRiskLevel = riskLevel.toString().toLowerCase();
+    if (normalizedRiskLevel.includes('bajo') || normalizedRiskLevel.includes('low')) {
+      return 'low';
+    } else if (normalizedRiskLevel.includes('medio') || normalizedRiskLevel.includes('medium')) {
+      return 'medium';
+    } else if (normalizedRiskLevel.includes('alto') || normalizedRiskLevel.includes('high') || normalizedRiskLevel.includes('crítico')) {
+      return 'high';
+    }
+    return 'low';
+  };
+
+  // Function to count accidents by risk level
+  const countAccidentsByRiskLevel = () => {
+    const counts = { low: 0, medium: 0, high: 0 };
+    
+    accidents.forEach(accident => {
+      const riskLevel = getRiskLevel(accident);
+      counts[riskLevel]++;
+    });
+    
+    return counts;
+  };
 
   // Check if backend is available
   const checkBackendAvailability = async () => {
@@ -166,6 +198,37 @@ function App() {
     linkElement.click();
   };
 
+  // Export data to Excel
+  const handleExportToExcel = () => {
+    // Prepare data for Excel export
+    const excelData = accidents.map(accident => ({
+      'ID': accident.id || '',
+      'Nombre del Incidente': accident.nombre || accident.name || '',
+      'Municipio': accident.municipio || accident.Municipio || '',
+      'Fecha': accident.fecha || '',
+      'Hora': accident.hora || accident.Hora || '',
+      'Tipo de Incidente': accident.tipo || accident.Tipo || '',
+      'Descripción': accident.descripcion || accident.Descripcion || '',
+      'Latitud': accident.coordenadas ? accident.coordenadas[1] : '',
+      'Longitud': accident.coordenadas ? accident.coordenadas[0] : '',
+      'Nivel de Riesgo': accident.nivel_riesgo || accident.riskLevel || '',
+      'Personas Afectadas': accident.afectados || accident.Afectados || 0,
+      'Localidad': accident.localidad || accident.brigada_asignada || '',
+      'Teléfono': accident.telefono || ''
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Incidentes');
+    
+    // Export to Excel file
+    const exportFileName = `tetela-accidents-${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, exportFileName);
+  };
+
   // Import data from file
   const handleImportData = (event) => {
     const file = event.target.files[0];
@@ -242,7 +305,110 @@ function App() {
                   >
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
+                  
+                  {/* 🌤️ Botón del clima */}
+                  <button
+                    onClick={() => setMostrarClima(!mostrarClima)}
+                    style={{
+                      position: 'absolute',
+                      top: '120px', // Positioned below the form button
+                      right: 0,
+                      backgroundColor: '#4285f4',
+                      color: 'white',
+                      borderRadius: '50% 0 0 50%',
+                      width: '50px',
+                      height: '50px',
+                      border: '2px solid #ffffff',
+                      fontSize: '1.5em',
+                      cursor: 'pointer',
+                      boxShadow: '0 6px 15px rgba(66, 133, 244, 0.4)',
+                      zIndex: 9999,
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      outline: 'none',
+                      transform: 'scale(1)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = '#3367d6';
+                      e.target.style.transform = 'scale(1.1)';
+                      e.target.style.boxShadow = '0 8px 20px rgba(66, 133, 244, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = '#4285f4';
+                      e.target.style.transform = 'scale(1)';
+                      e.target.style.boxShadow = '0 6px 15px rgba(66, 133, 244, 0.4)';
+                    }}
+                    onMouseDown={(e) => {
+                      e.target.style.transform = 'scale(0.95)';
+                    }}
+                    onMouseUp={(e) => {
+                      e.target.style.transform = 'scale(1.1)';
+                    }}
+                  >
+                    🌤️
+                  </button>
                 </div>
+                
+                {/* Widget del clima */}
+                {mostrarClima && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '170px', // Adjusted to appear below the weather button
+                      right: '1em',
+                      background: 'white',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                      zIndex: 9999,
+                      border: '1px solid #e0e0e0',
+                      maxWidth: '400px',
+                      width: '90%',
+                    }}
+                  >
+                    {/* Botón para cerrar el widget del clima */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        padding: '10px 10px 0 0',
+                      }}
+                    >
+                      <button
+                        onClick={() => setMostrarClima(false)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          fontSize: '20px',
+                          cursor: 'pointer',
+                          color: '#777',
+                          padding: '0',
+                          width: '24px',
+                          height: '24px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    
+                    <iframe
+                      src="https://www.meteoblue.com/es/tiempo/mapas/widget/tetela-de-ocampo_m%C3%A9xico_3515762?windAnimation=1&gust=1&satellite=1&cloudsAndPrecipitation=1&temperature=1&sunshine=1&extremeForecastIndex=1&geoloc=fixed&tempunit=C&windunit=km%252Fh&lengthunit=metric&zoom=5&autowidth=auto"
+                      frameBorder="0"
+                      scrolling="NO"
+                      allowTransparency="true"
+                      sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox"
+                      style={{
+                        width: '100%',
+                        height: '400px',
+                        borderRadius: '0 0 12px 12px',
+                      }}
+                    ></iframe>
+                  </div>
+                )}
                 
                 {/* Legend Panel */}
                 {showLegend && (
@@ -256,15 +422,15 @@ function App() {
                     <div className="legend-content">
                       <div className="legend-item">
                         <div className="legend-color" style={{backgroundColor: 'green'}}></div>
-                        <span>Riesgo Bajo</span>
+                        <span>Riesgo Bajo ({countAccidentsByRiskLevel().low})</span>
                       </div>
                       <div className="legend-item">
                         <div className="legend-color" style={{backgroundColor: 'orange'}}></div>
-                        <span>Riesgo Medio</span>
+                        <span>Riesgo Medio ({countAccidentsByRiskLevel().medium})</span>
                       </div>
                       <div className="legend-item">
                         <div className="legend-color" style={{backgroundColor: 'red'}}></div>
-                        <span>Riesgo Alto</span>
+                        <span>Riesgo Alto ({countAccidentsByRiskLevel().high})</span>
                       </div>
                       <div className="legend-description">
                         <p><strong>Incidentes reportados:</strong> {accidents.length} incidentes en Tetela de Ocampo</p>
@@ -278,7 +444,16 @@ function App() {
                             style={{ backgroundColor: '#28a745', display: 'flex', alignItems: 'center', gap: '5px' }}
                           >
                             <FontAwesomeIcon icon={faDownload} />
-                            Exportar Datos
+                            Exportar Datos (JSON)
+                          </button>
+                          
+                          <button 
+                            onClick={handleExportToExcel} 
+                            className="restore-button"
+                            style={{ backgroundColor: '#20c997', display: 'flex', alignItems: 'center', gap: '5px' }}
+                          >
+                            <FontAwesomeIcon icon={faDownload} />
+                            Exportar a Excel
                           </button>
                           
                           <label 
@@ -301,14 +476,6 @@ function App() {
                               style={{ display: 'none' }}
                             />
                           </label>
-                          
-                          <button 
-                            onClick={handleRestoreInitialData} 
-                            className="restore-button"
-                            style={{ backgroundColor: '#dc3545' }}
-                          >
-                            Restaurar Datos Iniciales
-                          </button>
                         </div>
                         
                         {/* Environment Info */}

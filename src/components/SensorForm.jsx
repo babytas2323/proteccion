@@ -1,21 +1,30 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// Function to get today's date in YYYY-MM-DD format without timezone issues
+const getTodayDate = () => {
+  const today = new Date();
+  // Adjust for local timezone
+  const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000);
+  return localDate.toISOString().split('T')[0];
+};
+
 const SensorForm = ({ onAddSensor }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     // Accident fields
     incidentName: '',
     municipality: 'Tetela de Ocampo',
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayDate(),
     time: '',
     type: 'Huracán',
     description: '',
     affected: 0,
     assignedTeam: '',
+    phoneNumber: '',
     // Shared fields
     coordinates: ['', ''],
-    riskLevel: 'low'
+    riskLevel: 'Bajo'
   });
   const [errors, setErrors] = useState({});
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
@@ -80,7 +89,7 @@ const SensorForm = ({ onAddSensor }) => {
     const newErrors = {};
     console.log('Validating form data:', formData);
     
-    // Validate accident fields
+    // Validate ALL accident fields as required
     if (!formData.incidentName.trim()) {
       newErrors.incidentName = 'El nombre del incidente es requerido';
     }
@@ -105,10 +114,18 @@ const SensorForm = ({ onAddSensor }) => {
       newErrors.description = 'La descripción es requerida';
     }
     
-    if (isNaN(formData.affected) || parseInt(formData.affected) < 0) {
-      newErrors.affected = 'El número de afectados debe ser un número positivo';
+    if (formData.affected === '' || isNaN(formData.affected) || parseInt(formData.affected) < 0) {
+      newErrors.affected = 'El número de afectados es requerido y debe ser un número positivo';
     }
     
+    // Validate phone number - required field
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = 'El número de teléfono es requerido';
+    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'El número de teléfono debe tener 10 dígitos';
+    }
+    
+    // Validate location fields - required unless using current location
     if (!useCurrentLocation) {
       if (!formData.coordinates[1]) {
         newErrors.latitude = 'La latitud es requerida';
@@ -121,6 +138,11 @@ const SensorForm = ({ onAddSensor }) => {
       } else if (isNaN(formData.coordinates[0]) || parseFloat(formData.coordinates[0]) < -180 || parseFloat(formData.coordinates[0]) > 180) {
         newErrors.longitude = 'La longitud debe ser un número entre -180 y 180';
       }
+    }
+    
+    // Validate assignedTeam (Localidad) - required field
+    if (!formData.assignedTeam.trim()) {
+      newErrors.assignedTeam = 'La localidad es requerida';
     }
     
     console.log('Validation errors:', newErrors);
@@ -153,7 +175,8 @@ const SensorForm = ({ onAddSensor }) => {
       coordenadas: [parseFloat(formData.coordinates[0]), parseFloat(formData.coordinates[1])],
       nivel_riesgo: formData.riskLevel,
       afectados: parseInt(formData.affected),
-      brigada_asignada: formData.assignedTeam
+      localidad: formData.assignedTeam,
+      telefono: formData.phoneNumber
     };
     
     console.log('Created accident object:', newAccident);
@@ -170,15 +193,16 @@ const SensorForm = ({ onAddSensor }) => {
           // Accident fields
           incidentName: '',
           municipality: 'Tetela de Ocampo',
-          date: new Date().toISOString().split('T')[0],
+          date: getTodayDate(),
           time: '',
           type: 'Huracán',
           description: '',
           affected: 0,
           assignedTeam: '',
+          phoneNumber: '',
           // Shared fields
           coordinates: ['', ''],
-          riskLevel: 'low'
+          riskLevel: 'Bajo'
         });
         setErrors({});
         setUseCurrentLocation(false);
@@ -201,10 +225,20 @@ const SensorForm = ({ onAddSensor }) => {
   // Function to get risk level color
   const getRiskColor = (riskLevel) => {
     switch (riskLevel) {
-      case 'low': return '#28a745';
-      case 'medium': return '#ffc107';
-      case 'high': return '#dc3545';
-      default: return '#6c757d';
+      case 'Bajo':
+      case 'bajo':
+      case 'low':
+        return '#28a745';
+      case 'Medio':
+      case 'medio':
+      case 'medium':
+        return '#ffc107';
+      case 'Alto':
+      case 'alto':
+      case 'high':
+        return '#dc3545';
+      default:
+        return '#6c757d';
     }
   };
 
@@ -260,7 +294,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              🏷️ Nombre del Incidente
+              🏷️ Nombre del Incidente *
             </label>
             <input
               type="text"
@@ -280,7 +314,7 @@ const SensorForm = ({ onAddSensor }) => {
                 transition: 'border-color 0.3s',
                 boxSizing: 'border-box'
               }}
-              placeholder="Ej: Deslizamiento de tierra en Cerro del Águila"
+              placeholder="Ej: Huracán Patricia afectando la región"
             />
             {errors.incidentName && (
               <span className="error-message" style={{
@@ -307,7 +341,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              🏙️ Municipio
+              🏙️ Municipio *
             </label>
             <input
               type="text"
@@ -354,7 +388,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              📅 Fecha
+              📅 Fecha *
             </label>
             <input
               type="date"
@@ -400,7 +434,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              ⏰ Hora
+              ⏰ Hora *
             </label>
             <input
               type="time"
@@ -446,7 +480,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              🌪️ Tipo de Incidente
+              🌪️ Tipo de Incidente *
             </label>
             <select
               id="type"
@@ -466,6 +500,7 @@ const SensorForm = ({ onAddSensor }) => {
                 boxSizing: 'border-box'
               }}
             >
+              <option value="">Seleccione un tipo de incidente</option>
               <option value="Huracán">Huracán</option>
               <option value="Inundación">Inundación</option>
               <option value="Derrumbe">Derrumbe</option>
@@ -530,7 +565,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              🧭 Latitud
+              🧭 Latitud *
             </label>
             <input
               type="number"
@@ -586,7 +621,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              🌍 Longitud
+              🌍 Longitud *
             </label>
             <input
               type="number"
@@ -642,7 +677,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              📝 Descripción
+              📝 Descripción *
             </label>
             <textarea
               id="description"
@@ -690,7 +725,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              👥 Personas Afectadas
+              👥 Personas Afectadas *
             </label>
             <input
               type="number"
@@ -726,6 +761,62 @@ const SensorForm = ({ onAddSensor }) => {
             )}
           </div>
 
+          {/* Phone Number */}
+          <div className="form-group">
+            <label 
+              htmlFor="phoneNumber" 
+              style={{
+                display: 'block',
+                color: '#333',
+                fontWeight: '600',
+                marginBottom: '8px',
+                fontSize: '16px'
+              }}
+            >
+              📱 Número de Teléfono *
+            </label>
+            <input
+              type="tel"
+              id="phoneNumber"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              className={errors.phoneNumber ? 'error' : ''}
+              style={{
+                width: '100%',
+                padding: '14px',
+                border: errors.phoneNumber ? '2px solid #dc3545' : '2px solid #ced4da',
+                borderRadius: '8px',
+                color: '#333',
+                backgroundColor: '#fff',
+                fontSize: '16px',
+                transition: 'border-color 0.3s',
+                boxSizing: 'border-box'
+              }}
+              placeholder="Ej: 2221234567"
+            />
+            {errors.phoneNumber && (
+              <span className="error-message" style={{
+                color: '#dc3545',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginTop: '6px',
+                display: 'block'
+              }}>
+                ⚠️ {errors.phoneNumber}
+              </span>
+            )}
+            <p style={{
+              color: '#6c757d',
+              fontSize: '12px',
+              fontStyle: 'italic',
+              marginTop: '5px',
+              marginBottom: '0'
+            }}>
+              Ingrese un número de 10 dígitos sin espacios ni guiones
+            </p>
+          </div>
+
           {/* Assigned Team */}
           <div className="form-group">
             <label 
@@ -738,7 +829,7 @@ const SensorForm = ({ onAddSensor }) => {
                 fontSize: '16px'
               }}
             >
-              👨‍🚒 Brigada Asignada
+              📍 Localidad *
             </label>
             <input
               type="text"
@@ -746,10 +837,11 @@ const SensorForm = ({ onAddSensor }) => {
               name="assignedTeam"
               value={formData.assignedTeam}
               onChange={handleChange}
+              className={errors.assignedTeam ? 'error' : ''}
               style={{
                 width: '100%',
                 padding: '14px',
-                border: '2px solid #ced4da',
+                border: errors.assignedTeam ? '2px solid #dc3545' : '2px solid #ced4da',
                 borderRadius: '8px',
                 color: '#333',
                 backgroundColor: '#fff',
@@ -757,8 +849,19 @@ const SensorForm = ({ onAddSensor }) => {
                 transition: 'border-color 0.3s',
                 boxSizing: 'border-box'
               }}
-              placeholder="Nombre de la brigada asignada"
+              placeholder="Nombre de la localidad"
             />
+            {errors.assignedTeam && (
+              <span className="error-message" style={{
+                color: '#dc3545',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginTop: '6px',
+                display: 'block'
+              }}>
+                ⚠️ {errors.assignedTeam}
+              </span>
+            )}
           </div>
 
           {/* Risk Level */}
@@ -798,9 +901,9 @@ const SensorForm = ({ onAddSensor }) => {
                 backgroundSize: '1em'
               }}
             >
-              <option value="low" style={{ color: '#28a745' }}>🟢 Bajo</option>
-              <option value="medium" style={{ color: '#ffc107' }}>🟡 Medio</option>
-              <option value="high" style={{ color: '#dc3545' }}>🔴 Alto</option>
+              <option value="Bajo" style={{ color: '#28a745' }}>🟢 Bajo</option>
+              <option value="Medio" style={{ color: '#ffc107' }}>🟡 Medio</option>
+              <option value="Alto" style={{ color: '#dc3545' }}>🔴 Alto</option>
             </select>
           </div>
 
