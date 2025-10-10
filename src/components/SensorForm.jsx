@@ -28,12 +28,12 @@ const SensorForm = ({ onAddSensor }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     console.log('Form field changed:', name, value);
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -52,15 +52,15 @@ const SensorForm = ({ onAddSensor }) => {
         showErrorNotification('Por favor seleccione un archivo de imagen válido (JPEG, PNG, etc.)', 'warning');
         return;
       }
-      
+
       // Check file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         showErrorNotification('La imagen es demasiado grande. El tamaño máximo es 5MB.', 'warning');
         return;
       }
-      
+
       setImage(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -78,7 +78,7 @@ const SensorForm = ({ onAddSensor }) => {
     const checked = e.target.checked;
     console.log('Location checkbox changed:', checked);
     setUseCurrentLocation(checked);
-    
+
     // If checkbox is checked, try to get current location
     if (checked) {
       if (navigator.geolocation) {
@@ -113,43 +113,43 @@ const SensorForm = ({ onAddSensor }) => {
   const validateForm = () => {
     const newErrors = {};
     console.log('Validating form data:', formData);
-    
+
     // Validate ALL accident fields as required
     if (!formData.incidentName.trim()) {
       newErrors.incidentName = 'El nombre del incidente es requerido';
     }
-    
+
     if (!formData.municipality.trim()) {
       newErrors.municipality = 'El municipio es requerido';
     }
-    
+
     if (!formData.date) {
       newErrors.date = 'La fecha es requerida';
     }
-    
+
     if (!formData.time) {
       newErrors.time = 'La hora es requerida';
     }
-    
+
     if (!formData.type.trim()) {
       newErrors.type = 'El tipo de incidente es requerido';
     }
-    
+
     if (!formData.description.trim()) {
       newErrors.description = 'La descripción es requerida';
     }
-    
+
     if (formData.affected === '' || isNaN(formData.affected) || parseInt(formData.affected) < 0) {
       newErrors.affected = 'El número de afectados es requerido y debe ser un número positivo';
     }
-    
+
     // Validate phone number - required field
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = 'El número de teléfono es requerido';
     } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'El número de teléfono debe tener 10 dígitos';
     }
-    
+
     // Validate location fields - required unless using current location
     if (!useCurrentLocation) {
       if (!formData.coordinates[1]) {
@@ -157,19 +157,19 @@ const SensorForm = ({ onAddSensor }) => {
       } else if (isNaN(formData.coordinates[1]) || parseFloat(formData.coordinates[1]) < -90 || parseFloat(formData.coordinates[1]) > 90) {
         newErrors.latitude = 'La latitud debe ser un número entre -90 y 90';
       }
-      
+
       if (!formData.coordinates[0]) {
         newErrors.longitude = 'La longitud es requerida';
       } else if (isNaN(formData.coordinates[0]) || parseFloat(formData.coordinates[0]) < -180 || parseFloat(formData.coordinates[0]) > 180) {
         newErrors.longitude = 'La longitud debe ser un número entre -180 y 180';
       }
     }
-    
+
     // Validate assignedTeam (Localidad) - required field
     if (!formData.assignedTeam.trim()) {
       newErrors.assignedTeam = 'La localidad es requerida';
     }
-    
+
     console.log('Validation errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -178,7 +178,7 @@ const SensorForm = ({ onAddSensor }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form submission started');
-    
+
     // Validate form
     if (!validateForm()) {
       const errorMsg = 'Por favor corrija los errores en el formulario';
@@ -186,9 +186,9 @@ const SensorForm = ({ onAddSensor }) => {
       showErrorNotification(errorMsg, 'warning');
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     // Create a new accident object
     const newAccident = {
       nombre: formData.incidentName,
@@ -203,7 +203,7 @@ const SensorForm = ({ onAddSensor }) => {
       localidad: formData.assignedTeam,
       telefono: formData.phoneNumber
     };
-    
+
     console.log('Created accident object:', newAccident);
 
     // Call the parent function to add the data
@@ -211,7 +211,7 @@ const SensorForm = ({ onAddSensor }) => {
       console.log('Calling onAddSensor with:', newAccident);
       const success = await onAddSensor(newAccident, image); // Pass image to parent function
       console.log('onAddSensor result:', success);
-      
+
       if (success) {
         // Reset form
         setFormData({
@@ -233,7 +233,7 @@ const SensorForm = ({ onAddSensor }) => {
         setImagePreview(null);
         setErrors({});
         setUseCurrentLocation(false);
-        
+
         // Show success message
         showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
       } else {
@@ -291,7 +291,7 @@ const SensorForm = ({ onAddSensor }) => {
         }}>
           🌪️ Reportar Incidente por Huracán
         </h2>
-        
+
         {isSubmitting && (
           <div style={{
             textAlign: 'center',
@@ -303,16 +303,16 @@ const SensorForm = ({ onAddSensor }) => {
             <p>📤 Guardando incidente... Por favor espere</p>
           </div>
         )}
-        
-        <form onSubmit={handleSubmit} style={{ 
+
+        <form onSubmit={handleSubmit} style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '20px'
         }}>
           {/* Incident Name */}
           <div className="form-group">
-            <label 
-              htmlFor="incidentName" 
+            <label
+              htmlFor="incidentName"
               style={{
                 display: 'block',
                 color: '#333',
@@ -358,8 +358,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Municipality */}
           <div className="form-group">
-            <label 
-              htmlFor="municipality" 
+            <label
+              htmlFor="municipality"
               style={{
                 display: 'block',
                 color: '#333',
@@ -405,8 +405,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Date */}
           <div className="form-group">
-            <label 
-              htmlFor="date" 
+            <label
+              htmlFor="date"
               style={{
                 display: 'block',
                 color: '#333',
@@ -444,15 +444,15 @@ const SensorForm = ({ onAddSensor }) => {
                 marginTop: '6px',
                 display: 'block'
               }}>
-                  ⚠️ {errors.date}
+                ⚠️ {errors.date}
               </span>
             )}
           </div>
-          
+
           {/* Time */}
           <div className="form-group">
-            <label 
-              htmlFor="time" 
+            <label
+              htmlFor="time"
               style={{
                 display: 'block',
                 color: '#333',
@@ -497,8 +497,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Type */}
           <div className="form-group">
-            <label 
-              htmlFor="type" 
+            <label
+              htmlFor="type"
               style={{
                 display: 'block',
                 color: '#333',
@@ -527,11 +527,18 @@ const SensorForm = ({ onAddSensor }) => {
                 boxSizing: 'border-box'
               }}
             >
-              <option value="">Seleccione un tipo de incidente</option>
-              <option value="Huracán">Huracán</option>
-              <option value="Inundación">Inundación</option>
-              <option value="Derrumbe">Derrumbe</option>
+              <option value=" ">Seleccione un tipo de incidente</option>
+              <option value="Caida de Arbol" >Caída de árbol</option>
+              <option value="Inundacion">Inundación</option>
+              <option value="Derrumbe">Derrumbe de tierra o laderas</option>
               <option value="Viento fuerte">Viento fuerte</option>
+              <option value="Caida de techo">Caída de techo o casas</option>
+              <option value="Caida de postes">Caída de postes eléctricos o cables</option>
+              <option value="Vehiculo arrastrado">Vehículos arrastrados por agua</option>
+              <option value="Objetos voladores">Objetos voladores peligrosos</option>
+              <option value="Derrumbe de puente">Derrumbe de puentes o caminos</option>
+              <option value="Rios desbordados">Ríos desbordados o corrientes fuertes</option>
+              <option value="Incendio">Incendio por cortocircuito o gas</option>
               <option value="Otro">Otro</option>
             </select>
             {errors.type && (
@@ -582,8 +589,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Latitude */}
           <div className="form-group">
-            <label 
-              htmlFor="latitude" 
+            <label
+              htmlFor="latitude"
               style={{
                 display: 'block',
                 color: '#333',
@@ -638,8 +645,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Longitude */}
           <div className="form-group">
-            <label 
-              htmlFor="longitude" 
+            <label
+              htmlFor="longitude"
               style={{
                 display: 'block',
                 color: '#333',
@@ -694,8 +701,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Description */}
           <div className="form-group">
-            <label 
-              htmlFor="description" 
+            <label
+              htmlFor="description"
               style={{
                 display: 'block',
                 color: '#333',
@@ -742,8 +749,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Affected People */}
           <div className="form-group">
-            <label 
-              htmlFor="affected" 
+            <label
+              htmlFor="affected"
               style={{
                 display: 'block',
                 color: '#333',
@@ -790,8 +797,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Phone Number */}
           <div className="form-group">
-            <label 
-              htmlFor="phoneNumber" 
+            <label
+              htmlFor="phoneNumber"
               style={{
                 display: 'block',
                 color: '#333',
@@ -846,8 +853,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Assigned Team */}
           <div className="form-group">
-            <label 
-              htmlFor="assignedTeam" 
+            <label
+              htmlFor="assignedTeam"
               style={{
                 display: 'block',
                 color: '#333',
@@ -893,8 +900,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Image Upload */}
           <div className="form-group">
-            <label 
-              htmlFor="image" 
+            <label
+              htmlFor="image"
               style={{
                 display: 'block',
                 color: '#333',
@@ -932,26 +939,26 @@ const SensorForm = ({ onAddSensor }) => {
             }}>
               Formatos aceptados: JPG, PNG, GIF. Tamaño máximo: 5MB
             </p>
-            
+
             {/* Image Preview */}
             {imagePreview && (
               <div style={{ marginTop: '15px' }}>
-                <p style={{ 
-                  fontWeight: '600', 
+                <p style={{
+                  fontWeight: '600',
                   marginBottom: '10px',
                   color: '#333'
                 }}>
                   Vista previa de la imagen:
                 </p>
-                <img 
-                  src={imagePreview} 
-                  alt="Vista previa" 
-                  style={{ 
-                    maxWidth: '100%', 
-                    maxHeight: '300px', 
+                <img
+                  src={imagePreview}
+                  alt="Vista previa"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '300px',
                     borderRadius: '8px',
                     border: '1px solid #ddd'
-                  }} 
+                  }}
                 />
               </div>
             )}
@@ -959,8 +966,8 @@ const SensorForm = ({ onAddSensor }) => {
 
           {/* Risk Level */}
           <div className="form-group">
-            <label 
-              htmlFor="riskLevel" 
+            <label
+              htmlFor="riskLevel"
               style={{
                 display: 'block',
                 color: '#333',
@@ -1001,13 +1008,13 @@ const SensorForm = ({ onAddSensor }) => {
           </div>
 
           {/* Full Width Actions */}
-          <div style={{ 
+          <div style={{
             textAlign: 'center',
             paddingTop: '25px',
             borderTop: '1px solid #dee2e6'
           }}>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isSubmitting}
               style={{
                 backgroundColor: isSubmitting ? '#6c757d' : '#007bff',
@@ -1036,8 +1043,8 @@ const SensorForm = ({ onAddSensor }) => {
             >
               {isSubmitting ? '📤 Guardando...' : '🌪️ Reportar'}
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => {
                 // Close the form panel
                 const closeButtons = document.querySelectorAll('.close-button');

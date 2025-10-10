@@ -155,10 +155,81 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
   // Function to format date
   const formatDate = (dateString) => {
     try {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(dateString).toLocaleDateString('es-ES', options);
+      // Create a new Date object from the date string
+      const date = new Date(dateString);
+      
+      // Format the date as DD/MM/YYYY HH:MM
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
     } catch (error) {
       console.error('Error formatting date:', error);
+      return 'Fecha no disponible';
+    }
+  };
+
+  // Function to convert 24-hour time to 12-hour time with AM/PM
+  const formatTime = (timeString) => {
+    try {
+      if (!timeString) return 'No especificada';
+      
+      // Split the time string into hours and minutes
+      const [hours, minutes] = timeString.split(':');
+      
+      // Convert to integers
+      let hour = parseInt(hours, 10);
+      const minute = parseInt(minutes, 10);
+      
+      // Determine AM/PM
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      
+      // Convert hour to 12-hour format
+      hour = hour % 12;
+      hour = hour ? hour : 12; // 0 should be 12
+      
+      // Add leading zeros if needed
+      const formattedHour = String(hour).padStart(2, '0');
+      const formattedMinute = String(minute).padStart(2, '0');
+      
+      return `${formattedHour}:${formattedMinute} ${ampm}`;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return 'Hora no disponible';
+    }
+  };
+
+  // Function to format date in Spanish: "10 de octubre de 2025"
+  const formatDateInSpanish = (dateString) => {
+    try {
+      if (!dateString) return 'No especificada';
+      
+      // Spanish month names
+      const months = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      ];
+      
+      // Parse the date string directly to avoid timezone issues
+      // Assuming the format is YYYY-MM-DD
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+        const day = parseInt(parts[2], 10);
+        
+        // Validate the parsed values
+        if (year > 0 && month >= 0 && month < 12 && day > 0 && day <= 31) {
+          return `${day} de ${months[month]} de ${year}`;
+        }
+      }
+      
+      return 'Fecha no válida';
+    } catch (error) {
+      console.error('Error formatting date in Spanish:', error);
       return 'Fecha no disponible';
     }
   };
@@ -273,16 +344,16 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
           // Set icon based on type and incident type
           if (point.type === 'accident' || point.tipo) {
             // Determine icon based on incident type
-            const lowerTipo = (point.tipo || point.Tipo || 'Huracán').toLowerCase();
+            const lowerTipo = (point.tipo || point.Tipo || 'Otro').toLowerCase();
             if (lowerTipo.includes('huracán') || lowerTipo.includes('hurricane')) {
               iconType = 'fas fa-hurricane';
-            } else if (lowerTipo.includes('inundación') || lowerTipo.includes('inundacion') || lowerTipo.includes('flood')) {
-              iconType = 'fas fa-water'; // Using water icon for floods
-            } else if (lowerTipo.includes('derrumbe') || lowerTipo.includes('deslizamiento') || lowerTipo.includes('landslide')) {
-              iconType = 'fas fa-mountain';
-            } else if (lowerTipo.includes('viento') || lowerTipo.includes('wind')) {
+            } else if (lowerTipo.includes('inundacion') || lowerTipo.includes('inundación') || lowerTipo.includes('flood') || lowerTipo.includes('rios desbordados') || lowerTipo.includes('ríos desbordados') || lowerTipo.includes('corrientes fuertes')) {
+              iconType = 'fas fa-water'; // Using water icon for floods and river overflows
+            } else if (lowerTipo.includes('derrumbe') || lowerTipo.includes('deslizamiento') || lowerTipo.includes('landslide') || lowerTipo.includes('tierra o laderas') || lowerTipo.includes('puente') || lowerTipo.includes('caminos')) {
+              iconType = 'fas fa-mountain'; // Mountain icon for landslides and bridge collapses
+            } else if (lowerTipo.includes('viento') || lowerTipo.includes('wind') || lowerTipo.includes('fuerte')) {
               iconType = 'fas fa-wind';
-            } else if (lowerTipo.includes('fuego') || lowerTipo.includes('fire')) {
+            } else if (lowerTipo.includes('fuego') || lowerTipo.includes('fire') || lowerTipo.includes('incendio') || lowerTipo.includes('cortocircuito') || lowerTipo.includes('gas')) {
               iconType = 'fas fa-fire';
             } else if (lowerTipo.includes('terremoto') || lowerTipo.includes('earthquake')) {
               iconType = 'fas fa-home'; // Using home icon for earthquakes
@@ -290,6 +361,16 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
               iconType = 'fas fa-cloud-rain';
             } else if (lowerTipo.includes('rayo') || lowerTipo.includes('lightning')) {
               iconType = 'fas fa-bolt';
+            } else if (lowerTipo.includes('arbol') || lowerTipo.includes('árbol') || lowerTipo.includes('tree')) {
+              iconType = 'fas fa-tree'; // Tree icon for fallen trees
+            } else if (lowerTipo.includes('techo') || lowerTipo.includes('casa') || lowerTipo.includes('roof') || lowerTipo.includes('house')) {
+              iconType = 'fas fa-house-damage'; // House damage icon for fallen roofs
+            } else if (lowerTipo.includes('poste') || lowerTipo.includes('postes') || lowerTipo.includes('cables') || lowerTipo.includes('electric')) {
+              iconType = 'fas fa-bolt'; // Bolt icon for fallen electrical posts
+            } else if (lowerTipo.includes('vehiculo') || lowerTipo.includes('vehículo') || lowerTipo.includes('vehicle') || lowerTipo.includes('car')) {
+              iconType = 'fas fa-car'; // Car icon for vehicles dragged by water
+            } else if (lowerTipo.includes('objeto') || lowerTipo.includes('objetos') || lowerTipo.includes('volador') || lowerTipo.includes('voladores') || lowerTipo.includes('object') || lowerTipo.includes('flying')) {
+              iconType = 'fas fa-wind'; // Wind icon for flying objects
             } else {
               iconType = 'fas fa-exclamation-triangle';
             }
@@ -390,11 +471,11 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
                 </div>
                 
                 <div style={{ marginBottom: '8px' }}>
-                  <strong>Fecha:</strong> {point.fecha ? formatDate(point.fecha) : 'No especificada'}
+                  <strong>Fecha:</strong> {formatDateInSpanish(point.fecha)}
                 </div>
                 
                 <div style={{ marginBottom: '8px' }}>
-                  <strong>Hora:</strong> {point.hora || point.Hora || 'No especificada'}
+                  <strong>Hora:</strong> {point.hora ? formatTime(point.hora) : 'No especificada'}
                 </div>
                 
                 <div style={{ marginBottom: '8px' }}>

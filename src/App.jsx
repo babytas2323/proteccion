@@ -55,6 +55,21 @@ function App() {
     return counts;
   };
 
+  // Function to count accidents by type
+  const getIncidentTypeCounts = () => {
+    const typeCounts = {};
+    
+    accidents.forEach(accident => {
+      const type = accident.tipo || 'No especificado';
+      typeCounts[type] = (typeCounts[type] || 0) + 1;
+    });
+    
+    // Convert to array of elements to display
+    return Object.entries(typeCounts).map(([type, count]) => (
+      <p key={type}><strong>{type}:</strong> {count} incidentes</p>
+    ));
+  };
+
   // Check if backend is available
   const checkBackendAvailability = async () => {
     try {
@@ -634,8 +649,14 @@ function App() {
                           <span>Riesgo Alto ({countAccidentsByRiskLevel().high})</span>
                         </div>
                         <div className="legend-description">
-                          <p><strong>Incidentes reportados:</strong> {accidents.length} incidentes en Tetela de Ocampo</p>
-                          <p><strong>Última actualización:</strong> {new Date().toLocaleString('es-MX')}</p>
+                          <p><strong>Incidentes reportados:</strong> <br />{accidents.length} incidentes en Tetela de Ocampo</p>
+                          <p><strong>Última actualización:</strong><br /> {new Date().toLocaleString('es-MX')}</p>
+                          
+                          {/* Incident type counts */}
+                          <div className="incident-type-counts">
+                            <h4>Clasificación de Incidentes por Tipo:</h4>
+                            {getIncidentTypeCounts()}
+                          </div>
                           
                           {/* Data Management Buttons */}
                           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px' }}>
