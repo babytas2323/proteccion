@@ -4,6 +4,7 @@ import path from 'path';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import multer from 'multer';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -12,9 +13,43 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = 3004;
 
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(uploadsDir)); // Serve uploaded files
 
 // Path to accidents data file
 const accidentsFilePath = path.join(__dirname, 'src', 'data', 'accidents.json');
@@ -56,9 +91,11 @@ app.get('/api/accidents', (req, res) => {
   }
 });
 
-app.post('/api/accidents', (req, res) => {
+// Handle accident creation with optional image upload
+app.post('/api/accidents', upload.single('image'), (req, res) => {
   try {
-    const newAccident = req.body;
+    // Parse the accident data from form data
+    const newAccident = JSON.parse(req.body.accident);
     
     // Validate required fields
     if (!newAccident.nombre || !newAccident.tipo || !newAccident.descripcion) {
@@ -73,6 +110,12 @@ app.post('/api/accidents', (req, res) => {
     // Add new accident with timestamp
     newAccident.id = Date.now();
     newAccident.createdAt = new Date().toISOString();
+    
+    // If an image was uploaded, add the image path to the accident data
+    if (req.file) {
+      newAccident.imagePath = `/uploads/${req.file.filename}`;
+    }
+    
     accidents.push(newAccident);
     
     // Save to file
@@ -158,8 +201,21 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Error handling middleware for multer
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File size too large. Maximum 5MB allowed.' });
+    }
+  } else if (error.message === 'Only image files are allowed') {
+    return res.status(400).json({ error: 'Only image files are allowed' });
+  }
+  next(error);
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Simple backend service running on http://localhost:${PORT}`);
   console.log(`📁 Data file: ${accidentsFilePath}`);
+  console.log(`📁 Uploads directory: ${uploadsDir}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
 });

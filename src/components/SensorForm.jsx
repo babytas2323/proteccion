@@ -19,6 +19,8 @@ const SensorForm = ({ onAddSensor }) => {
     coordinates: ['', ''],
     riskLevel: 'Bajo'
   });
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,6 +40,36 @@ const SensorForm = ({ onAddSensor }) => {
         ...prev,
         [name]: ''
       }));
+    }
+  };
+
+  // Handle image file selection
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        showErrorNotification('Por favor seleccione un archivo de imagen válido (JPEG, PNG, etc.)', 'warning');
+        return;
+      }
+      
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        showErrorNotification('La imagen es demasiado grande. El tamaño máximo es 5MB.', 'warning');
+        return;
+      }
+      
+      setImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImage(null);
+      setImagePreview(null);
     }
   };
 
@@ -177,7 +209,7 @@ const SensorForm = ({ onAddSensor }) => {
     // Call the parent function to add the data
     try {
       console.log('Calling onAddSensor with:', newAccident);
-      const success = await onAddSensor(newAccident);
+      const success = await onAddSensor(newAccident, image); // Pass image to parent function
       console.log('onAddSensor result:', success);
       
       if (success) {
@@ -197,6 +229,8 @@ const SensorForm = ({ onAddSensor }) => {
           coordinates: ['', ''],
           riskLevel: 'Bajo'
         });
+        setImage(null);
+        setImagePreview(null);
         setErrors({});
         setUseCurrentLocation(false);
         
@@ -854,6 +888,72 @@ const SensorForm = ({ onAddSensor }) => {
               }}>
                 ⚠️ {errors.assignedTeam}
               </span>
+            )}
+          </div>
+
+          {/* Image Upload */}
+          <div className="form-group">
+            <label 
+              htmlFor="image" 
+              style={{
+                display: 'block',
+                color: '#333',
+                fontWeight: '600',
+                marginBottom: '8px',
+                fontSize: '16px'
+              }}
+            >
+              📷 Imagen del Incidente (Opcional)
+            </label>
+            <input
+              type="file"
+              id="image"
+              name="image"
+              accept="image/*"
+              onChange={handleImageChange}
+              style={{
+                width: '100%',
+                padding: '14px',
+                border: '2px solid #ced4da',
+                borderRadius: '8px',
+                color: '#333',
+                backgroundColor: '#fff',
+                fontSize: '16px',
+                transition: 'border-color 0.3s',
+                boxSizing: 'border-box'
+              }}
+            />
+            <p style={{
+              color: '#6c757d',
+              fontSize: '12px',
+              fontStyle: 'italic',
+              marginTop: '5px',
+              marginBottom: '0'
+            }}>
+              Formatos aceptados: JPG, PNG, GIF. Tamaño máximo: 5MB
+            </p>
+            
+            {/* Image Preview */}
+            {imagePreview && (
+              <div style={{ marginTop: '15px' }}>
+                <p style={{ 
+                  fontWeight: '600', 
+                  marginBottom: '10px',
+                  color: '#333'
+                }}>
+                  Vista previa de la imagen:
+                </p>
+                <img 
+                  src={imagePreview} 
+                  alt="Vista previa" 
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '300px', 
+                    borderRadius: '8px',
+                    border: '1px solid #ddd'
+                  }} 
+                />
+              </div>
             )}
           </div>
 

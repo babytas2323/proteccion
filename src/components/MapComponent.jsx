@@ -13,7 +13,8 @@ import {
   faHome,
   faMountain,
   faCloudRain,
-  faBolt
+  faBolt,
+  faImage
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { showErrorNotification } from '../utils/errorHandler';
@@ -31,7 +32,8 @@ library.add(
   faHome,
   faMountain,
   faCloudRain,
-  faBolt
+  faBolt,
+  faImage
 );
 
 // Fix for default marker icons in Leaflet
@@ -436,33 +438,67 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
                 </div>
                 
                 {/* Display images if available */}
-                {(point.imagenes || point.Imagenes) && (point.imagenes || point.Imagenes).length > 0 && (
+                {(point.imagenes || point.Imagenes || point.imagePath) && (
                   <div style={{ 
                     marginTop: '10px',
                     borderTop: '1px solid #eee',
                     paddingTop: '10px'
                   }}>
-                    {(point.imagenes || point.Imagenes).map((img, imgIndex) => (
-                      <img 
-                        key={imgIndex}
-                        src={getImagePath(img)} 
-                        alt={`Incidente ${imgIndex + 1}`} 
-                        onError={(e) => {
-                          // Handle image loading errors
-                          console.error('Failed to load image:', img);
-                          e.target.style.display = 'none';
-                          showErrorNotification('Error al cargar imagen del incidente.');
-                        }}
-                        style={{ 
-                          width: '100%', 
-                          maxHeight: '150px', 
-                          objectFit: 'cover', 
-                          borderRadius: '8px',
-                          border: '1px solid #ddd',
-                          marginBottom: '5px'
-                        }}
-                      />
-                    ))}
+                    {/* Display single image if imagePath exists */}
+                    {point.imagePath && (
+                      <div>
+                        <FontAwesomeIcon icon={faImage} style={{ marginRight: '5px' }} />
+                        <strong>Imagen del incidente:</strong>
+                        <img 
+                          src={getImagePath(point.imagePath)} 
+                          alt="Imagen del incidente" 
+                          onError={(e) => {
+                            // Handle image loading errors
+                            console.error('Failed to load image:', point.imagePath);
+                            e.target.style.display = 'none';
+                            showErrorNotification('Error al cargar imagen del incidente.');
+                          }}
+                          style={{ 
+                            width: '100%', 
+                            maxHeight: '150px', 
+                            objectFit: 'cover', 
+                            borderRadius: '8px',
+                            border: '1px solid #ddd',
+                            marginTop: '5px'
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Display multiple images if imagenes array exists */}
+                    {(point.imagenes || point.Imagenes) && (point.imagenes || point.Imagenes).length > 0 && (
+                      <div>
+                        <FontAwesomeIcon icon={faImage} style={{ marginRight: '5px' }} />
+                        <strong>Imágenes del incidente:</strong>
+                        {(point.imagenes || point.Imagenes).map((img, imgIndex) => (
+                          <img 
+                            key={imgIndex}
+                            src={getImagePath(img)} 
+                            alt={`Incidente ${imgIndex + 1}`} 
+                            onError={(e) => {
+                              // Handle image loading errors
+                              console.error('Failed to load image:', img);
+                              e.target.style.display = 'none';
+                              showErrorNotification('Error al cargar imagen del incidente.');
+                            }}
+                            style={{ 
+                              width: '100%', 
+                              maxHeight: '150px', 
+                              objectFit: 'cover', 
+                              borderRadius: '8px',
+                              border: '1px solid #ddd',
+                              marginBottom: '5px',
+                              marginTop: '5px'
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

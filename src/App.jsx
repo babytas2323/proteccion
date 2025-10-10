@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faInfoCircle, faPlus, faTimes, faDownload, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faInfoCircle, faPlus, faTimes, faDownload, faUpload, faImage } from '@fortawesome/free-solid-svg-icons';
 import MapComponent from './components/MapComponent';
 import SensorForm from './components/SensorForm';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -174,7 +174,7 @@ function App() {
     loadAccidentsData();
   }, [apiBaseUrl]);
 
-  const handleAddAccident = async (newAccident) => {
+  const handleAddAccident = async (newAccident, imageFile) => {
     try {
       console.log('Attempting to save accident:', newAccident);
       
@@ -182,27 +182,53 @@ function App() {
       const isBackendAvailable = await checkBackendAvailability();
       
       if (isBackendAvailable) {
-        // Save to backend
-        const response = await fetch(`${apiBaseUrl}/api/accidents`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newAccident),
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          // Add to local state
-          const updatedAccidents = [...accidents, result.data];
-          setAccidents(updatedAccidents);
-          setShowForm(false);
-          showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
-          return true;
+        // If there's an image, use FormData to send both accident data and image
+        if (imageFile) {
+          const formData = new FormData();
+          formData.append('image', imageFile);
+          formData.append('accident', JSON.stringify(newAccident));
+          
+          const response = await fetch(`${apiBaseUrl}/api/accidents`, {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            // Add to local state
+            const updatedAccidents = [...accidents, result.data];
+            setAccidents(updatedAccidents);
+            setShowForm(false);
+            showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
+            return true;
+          } else {
+            const errorMessage = await handleApiError(response);
+            showErrorNotification(errorMessage);
+            return false;
+          }
         } else {
-          const errorMessage = await handleApiError(response);
-          showErrorNotification(errorMessage);
-          return false;
+          // Save to backend without image
+          const response = await fetch(`${apiBaseUrl}/api/accidents`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newAccident),
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            // Add to local state
+            const updatedAccidents = [...accidents, result.data];
+            setAccidents(updatedAccidents);
+            setShowForm(false);
+            showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
+            return true;
+          } else {
+            const errorMessage = await handleApiError(response);
+            showErrorNotification(errorMessage);
+            return false;
+          }
         }
       } else {
         // For offline scenarios, always save locally first
