@@ -16,6 +16,7 @@ import {
   faBolt
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { showErrorNotification } from '../utils/errorHandler';
 import 'leaflet/dist/leaflet.css';
 
 // Add the icons to the library
@@ -55,11 +56,11 @@ const LocationControl = ({ onLocationFound }) => {
         },
         (error) => {
           console.error('Error getting location:', error);
-          alert('No se pudo obtener la ubicación. Por favor, asegúrate de permitir el acceso a la ubicación.');
+          showErrorNotification('No se pudo obtener la ubicación. Por favor, asegúrate de permitir el acceso a la ubicación.', 'warning');
         }
       );
     } else {
-      alert('La geolocalización no es compatible con este navegador.');
+      showErrorNotification('La geolocalización no es compatible con este navegador.', 'warning');
     }
   };
 
@@ -151,32 +152,43 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
 
   // Function to format date
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('es-ES', options);
+    try {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString('es-ES', options);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Fecha no disponible';
+    }
   };
 
   // Function to get image path based on environment and image type
   const getImagePath = (imgPath) => {
-    // If it's already an absolute URL or Base64 data URL, return as is
-    if (imgPath.startsWith('http') || imgPath.startsWith('data:')) {
+    try {
+      // If it's already an absolute URL or Base64 data URL, return as is
+      if (imgPath.startsWith('http') || imgPath.startsWith('data:')) {
+        return imgPath;
+      }
+      
+      // For relative paths, we need to handle them correctly
+      // Remove leading slash if present
+      let cleanPath = imgPath;
+      if (cleanPath.startsWith('/')) {
+        cleanPath = cleanPath.substring(1);
+      }
+      
+      // For Vercel deployment, images should be in the root or images directory
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // Try different possible paths for Vercel deployment
+        return cleanPath;
+      }
+      
+      // For local development, keep the original path
       return imgPath;
+    } catch (error) {
+      console.error('Error processing image path:', error);
+      showErrorNotification('Error al procesar la imagen.');
+      return '';
     }
-    
-    // For relative paths, we need to handle them correctly
-    // Remove leading slash if present
-    let cleanPath = imgPath;
-    if (cleanPath.startsWith('/')) {
-      cleanPath = cleanPath.substring(1);
-    }
-    
-    // For Vercel deployment, images should be in the root or images directory
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      // Try different possible paths for Vercel deployment
-      return cleanPath;
-    }
-    
-    // For local development, keep the original path
-    return imgPath;
   };
 
   return (
@@ -439,6 +451,7 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
                           // Handle image loading errors
                           console.error('Failed to load image:', img);
                           e.target.style.display = 'none';
+                          showErrorNotification('Error al cargar imagen del incidente.');
                         }}
                         style={{ 
                           width: '100%', 

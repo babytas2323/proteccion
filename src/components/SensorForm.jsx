@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// Function to get today's date in YYYY-MM-DD format without timezone issues
-const getTodayDate = () => {
-  const today = new Date();
-  // Adjust for local timezone
-  const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000);
-  return localDate.toISOString().split('T')[0];
-};
+import { showErrorNotification } from '../utils/errorHandler';
 
 const SensorForm = ({ onAddSensor }) => {
   const navigate = useNavigate();
@@ -15,7 +8,7 @@ const SensorForm = ({ onAddSensor }) => {
     // Accident fields
     incidentName: '',
     municipality: 'Tetela de Ocampo',
-    date: getTodayDate(),
+    date: new Date().toISOString().split('T')[0],
     time: '',
     type: 'Huracán',
     description: '',
@@ -68,12 +61,12 @@ const SensorForm = ({ onAddSensor }) => {
           },
           (error) => {
             console.error('Error getting location:', error);
-            alert('No se pudo obtener la ubicación. Por favor, ingresa las coordenadas manualmente.');
+            showErrorNotification('No se pudo obtener la ubicación. Por favor, ingresa las coordenadas manualmente.', 'warning');
             setUseCurrentLocation(false);
           }
         );
       } else {
-        alert('La geolocalización no es compatible con este navegador.');
+        showErrorNotification('La geolocalización no es compatible con este navegador.', 'warning');
         setUseCurrentLocation(false);
       }
     } else {
@@ -158,7 +151,7 @@ const SensorForm = ({ onAddSensor }) => {
     if (!validateForm()) {
       const errorMsg = 'Por favor corrija los errores en el formulario';
       console.error(errorMsg);
-      alert(errorMsg);
+      showErrorNotification(errorMsg, 'warning');
       return;
     }
     
@@ -193,7 +186,7 @@ const SensorForm = ({ onAddSensor }) => {
           // Accident fields
           incidentName: '',
           municipality: 'Tetela de Ocampo',
-          date: getTodayDate(),
+          date: new Date().toISOString().split('T')[0],
           time: '',
           type: 'Huracán',
           description: '',
@@ -208,15 +201,15 @@ const SensorForm = ({ onAddSensor }) => {
         setUseCurrentLocation(false);
         
         // Show success message
-        alert('Reporte de incidente agregado exitosamente!');
+        showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
       } else {
         const errorMsg = 'Error al agregar los datos. Por favor intente nuevamente.';
         console.error(errorMsg);
-        alert(errorMsg);
+        showErrorNotification(errorMsg, 'error');
       }
     } catch (error) {
       console.error('Error adding data:', error);
-      alert('Error al agregar los datos. Por favor intente nuevamente.');
+      showErrorNotification('Error al agregar los datos. Por favor intente nuevamente.', 'error');
     } finally {
       setIsSubmitting(false);
     }
