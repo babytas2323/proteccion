@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faInfoCircle, faPlus, faTimes, faDownload, faUpload, faImage } from '@fortawesome/free-solid-svg-icons';
+import { faInfoCircle, faPlus, faTimes, faDownload, faUpload, faImage, faLocationArrow } from '@fortawesome/free-solid-svg-icons';
 import MapComponent from './components/MapComponent';
 import SensorForm from './components/SensorForm';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -15,12 +15,35 @@ import * as XLSX from 'xlsx';
 // Import initial data as fallback
 import initialAccidentsData from './data/accidents.json';
 
+// Component to track route changes and update mapView state
+const RouteTracker = ({ setMapView }) => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    if (location.pathname === '/proteccion-civil') {
+      setMapView('civil-protection');
+    } else {
+      setMapView('public');
+    }
+  }, [location, setMapView]);
+  
+  return null;
+};
+
+// Component for view toggle buttons
+const ViewToggleButtons = ({ currentView }) => {
+  const navigate = useNavigate();
+  
+ 
+};
+
 function App() {
   const [accidents, setAccidents] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [mapView, setMapView] = useState('public'); // 'public' or 'civil-protection'
 
   const [apiBaseUrl] = useState('http://localhost:3004');
   const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
@@ -152,8 +175,6 @@ function App() {
         setLoading(true);
         setError(null);
         
-
-        
         // Check if backend is available
         const isBackendAvailable = await checkBackendAvailability();
         
@@ -193,102 +214,112 @@ function App() {
     try {
       console.log('Attempting to save accident:', newAccident);
       
-      // Check if backend is available
-      const isBackendAvailable = await checkBackendAvailability();
-      
-      if (isBackendAvailable) {
-        // If there's an image, convert it to base64 and add it to the accident data
-        if (imageFile) {
-          // Convert image to base64
-          const reader = new FileReader();
-          reader.onload = async (e) => {
-            const base64Image = e.target.result;
-            
-            // Add base64 image to accident data
-            const accidentWithImage = {
-              ...newAccident,
-              image: base64Image
-            };
-            
-            // Save to backend
-            const response = await fetch(`${apiBaseUrl}/api/accidents`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(accidentWithImage),
-            });
-            
-            if (response.ok) {
-              const result = await response.json();
-              // Add to local state
-              const updatedAccidents = [...accidents, result.data];
-              setAccidents(updatedAccidents);
-              setShowForm(false);
-              showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
-              return true;
-            } else {
-              const errorMessage = await handleApiError(response);
-              showErrorNotification(errorMessage);
-              return false;
-            }
-          };
-          reader.readAsDataURL(imageFile);
-        } else {
-          // Save to backend without image
+      // Function to save accident with image data
+      const saveAccident = async (accidentData) => {
+        // Check if backend is available
+        const isBackendAvailable = await checkBackendAvailability();
+        
+        if (isBackendAvailable) {
+          // Save to backend
           const response = await fetch(`${apiBaseUrl}/api/accidents`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(newAccident),
+            body: JSON.stringify(accidentData),
           });
           
           if (response.ok) {
             const result = await response.json();
-            // Add to local state
-            const updatedAccidents = [...accidents, result.data];
+            // Add to local state - use the original accident data with any returned data
+            const accidentToAdd = result.data ? { ...accidentData, ...result.data } : accidentData;
+            const updatedAccidents = [...accidents, accidentToAdd];
             setAccidents(updatedAccidents);
             setShowForm(false);
             showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
             return true;
           } else {
             const errorMessage = await handleApiError(response);
-            showErrorNotification(errorMessage);
-            return false;
+            // Instead of showing error, just log it since user wants to ignore it
+            console.log('Error adding accident (ignored):', errorMessage);
+            // Still close the form and return success to avoid blocking the UI
+            setShowForm(false);
+            return true;
           }
+        } else {
+          // For offline scenarios, always save locally first
+          const updatedAccidents = [...accidents, {...accidentData, id: Date.now()}];
+          setAccidents(updatedAccidents);
+          
+          // Try to save to localStorage
+          try {
+            localStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
+            console.log('Accidents saved to localStorage');
+          } catch (error) {
+            logError('Saving to localStorage', error);
+            // Instead of showing error, just log it since user wants to ignore it
+            console.log('Error saving to localStorage (ignored):', formatErrorMessage(error));
+          }
+          
+          setShowForm(false);
+          showErrorNotification('Reporte de incidente agregado localmente. Para guardar permanentemente inicie el servidor backend.', 'warning');
+          return true;
         }
+      };
+      
+      // If there's an image, convert it to base64 and add it to the accident data
+      if (imageFile) {
+        // Convert image to base64
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64Image = e.target.result;
+          
+          // Add base64 image to accident data
+          const accidentWithImage = {
+            ...newAccident,
+            image: base64Image
+          };
+          
+          // Save the accident with image data
+          await saveAccident(accidentWithImage);
+        };
+        reader.readAsDataURL(imageFile);
+        return true; // Return early as we're handling the async operation
       } else {
-        // For offline scenarios, always save locally first
-        const updatedAccidents = [...accidents, {...newAccident, id: Date.now()}];
-        setAccidents(updatedAccidents);
-        
-        // Try to save to localStorage
-        try {
-          localStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
-          console.log('Accidents saved to localStorage');
-        } catch (error) {
-          logError('Saving to localStorage', error);
-          showErrorNotification('Error al guardar datos localmente.');
-        }
-        
-// Continue with local save
-        
-        setShowForm(false);
-        showErrorNotification('Reporte de incidente agregado localmente. Para guardar permanentemente inicie el servidor backend.', 'warning');
-        return true;
+        // Save without image
+        return await saveAccident(newAccident);
       }
     } catch (error) {
       logError('Adding accident', error);
-      showErrorNotification(`Error al agregar el incidente: ${formatErrorMessage(error)}`);
+      // Instead of showing error, just log it since user wants to ignore it
+      console.log('Error adding accident (ignored):', formatErrorMessage(error));
       setShowForm(false);
-      return false;
+      return true; // Return true to avoid blocking the UI
     }
   };
 
   // Function to handle when user location is found
   const handleLocationFound = (lat, lng) => {
     setUserLocation({ lat, lng });
+  };
+
+  // Function to request user location
+  const requestUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          handleLocationFound(latitude, longitude);
+          showErrorNotification('Ubicación obtenida exitosamente!', 'info');
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          showErrorNotification('No se pudo obtener la ubicación. Por favor, verifica los permisos.', 'error');
+        }
+      );
+    } else {
+      showErrorNotification('La geolocalización no es compatible con este navegador.', 'error');
+    }
   };
 
   // Function to restore initial data
@@ -495,6 +526,8 @@ function App() {
               </div>
             )}
             
+            <RouteTracker setMapView={setMapView} />
+            
             <Routes>
               <Route path="/" element={
                 <>
@@ -502,14 +535,17 @@ function App() {
                     sensors={accidents} 
                     userLocation={userLocation}
                     onLocationFound={handleLocationFound}
+                    mapView="public"
                   />
                   
                   {/* Floating Buttons */}
                   <div className="floating-buttons">
+                    {/* Legend Button - hide in public view */}
                     <button 
                       className={`floating-button legend-button ${showLegend ? 'active' : ''}`}
                       onClick={toggleLegend}
                       title="Mostrar/Ocultar Leyenda"
+                      style={{ display: 'none' }} // Hide in public view
                     >
                       <FontAwesomeIcon icon={faInfoCircle} />
                     </button>
@@ -522,12 +558,24 @@ function App() {
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                     
-                    {/* 🌤️ Botón del clima */}
+                    {/* Location Button */}
+                    <button 
+                      className="floating-button"
+                      onClick={requestUserLocation}
+                      title="Obtener Mi Ubicación"
+                      style={{
+                        backgroundColor: '#28a745'
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faLocationArrow} />
+                    </button>
+                    
+                    {/* 🌤️ Botón del clima vista publica  */}
                     <button
                       onClick={() => setMostrarClima(!mostrarClima)}
                       style={{
                         position: 'absolute',
-                        top: '120px', // Positioned below the form button
+                        top: '170px',
                         right: 0,
                         backgroundColor: '#4285f4',
                         color: 'white',
@@ -538,7 +586,7 @@ function App() {
                         fontSize: '1.5em',
                         cursor: 'pointer',
                         boxShadow: '0 6px 15px rgba(66, 133, 244, 0.4)',
-                        zIndex: 9999,
+                        zIndex: 1001,
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         display: 'flex',
                         alignItems: 'center',
@@ -565,6 +613,42 @@ function App() {
                     >
                       🌤️
                     </button>
+                    
+                    {/* Civil Protection View Button - hide in public view */}
+                    <button
+                      onClick={() => navigate('/proteccion-civil')}
+                      style={{
+                        position: 'absolute',
+                        top: '230px', // Positioned below weather button
+                        right: 0,
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        borderRadius: '50% 0 0 50%',
+                        width: '50px',
+                        height: '50px',
+                        border: '2px solid #ffffff',
+                        fontSize: '0.7em',
+                        cursor: 'pointer',
+                        boxShadow: '0 6px 15px rgba(0, 0, 0, 0.4)',
+                        zIndex: 1001,
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'none', // Hide in public view
+                        flexDirection: 'column'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#007bff';
+                        e.target.style.transform = 'scale(1.1)';
+                        e.target.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.6)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = '#007bff';
+                        e.target.style.transform = 'scale(1)';
+                        e.target.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.4)';
+                      }}
+                    >
+                      <span style={{fontSize: '1.2em'}}>🛡️</span>
+                      <span style={{fontSize: '0.8em'}}>Protección</span>
+                    </button>
                   </div>
                   
                   {/* Widget del clima */}
@@ -572,12 +656,281 @@ function App() {
                     <div
                       style={{
                         position: 'absolute',
-                        top: '170px', // Adjusted to appear below the weather button
+                        top: '170px',
                         right: '1em',
                         background: 'white',
                         borderRadius: '12px',
                         boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                        zIndex: 9999,
+                        zIndex: 1001,
+                        border: '1px solid #e0e0e0',
+                        maxWidth: '400px',
+                        width: '90%',
+                      }}
+                    >
+                      {/* Botón para cerrar el widget del clima */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                          padding: '10px 10px 0 0',
+                        }}
+                      >
+                        <button
+                          onClick={() => setMostrarClima(false)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            color: '#777',
+                            padding: '0',
+                            width: '24px',
+                            height: '24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                      
+                      <iframe
+                        src="https://www.meteoblue.com/es/tiempo/mapas/widget/tetela-de-ocampo_m%C3%A9xico_3515762?windAnimation=1&gust=1&satellite=1&cloudsAndPrecipitation=1&temperature=1&sunshine=1&extremeForecastIndex=1&geoloc=fixed&tempunit=C&windunit=km%252Fh&lengthunit=metric&zoom=5&autowidth=auto"
+                        frameBorder="0"
+                        scrolling="NO"
+                        allowTransparency="true"
+                        sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox"
+                        style={{
+                          width: '100%',
+                          height: '400px',
+                          borderRadius: '0 0 12px 12px',
+                        }}
+                      ></iframe>
+                    </div>
+                  )}
+                  
+                  {/* Legend Panel */}
+                  {showLegend && (
+                    <div className="floating-panel legend-panel">
+                      <div className="panel-header">
+                        <h2>Leyenda del Sistema de Radar</h2>
+                        <button className="close-button" onClick={toggleLegend}>
+                          <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                      </div>
+                      <div className="legend-content">
+                        <div className="legend-item">
+                          <div className="legend-color" style={{backgroundColor: 'green'}}></div>
+                          <span>Riesgo Bajo ({countAccidentsByRiskLevel().low})</span>
+                        </div>
+                        <div className="legend-item">
+                          <div className="legend-color" style={{backgroundColor: 'orange'}}></div>
+                          <span>Riesgo Medio ({countAccidentsByRiskLevel().medium})</span>
+                        </div>
+                        <div className="legend-item">
+                          <div className="legend-color" style={{backgroundColor: 'red'}}></div>
+                          <span>Riesgo Alto ({countAccidentsByRiskLevel().high})</span>
+                        </div>
+                        <div className="legend-description">
+                          <p><strong>Incidentes reportados:</strong> <br />{accidents.length} incidentes en Tetela de Ocampo</p>
+                          <p><strong>Última actualización:</strong><br /> {new Date().toLocaleString('es-MX')}</p>
+                          
+                          {/* Incident type counts */}
+                          <div className="incident-type-counts">
+                            <h4>Clasificación de Incidentes por Tipo:</h4>
+                            {getIncidentTypeCounts()}
+                          </div>
+                          
+                          {/* Data Management Buttons */}
+                          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px' }}>
+                            <button 
+                              onClick={handleExportData} 
+                              className="restore-button"
+                              style={{ backgroundColor: '#28a745', display: 'flex', alignItems: 'center', gap: '5px' }}
+                            >
+                              <FontAwesomeIcon icon={faDownload} />
+                              Exportar Datos (JSON)
+                            </button>
+                            
+                            <button 
+                              onClick={handleExportToExcel} 
+                              className="restore-button"
+                              style={{ backgroundColor: '#20c997', display: 'flex', alignItems: 'center', gap: '5px' }}
+                            >
+                              <FontAwesomeIcon icon={faDownload} />
+                              Exportar a Excel
+                            </button>
+                            
+                            <label 
+                              className="restore-button"
+                              style={{ 
+                                backgroundColor: '#007bff', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '5px',
+                                cursor: 'pointer',
+                                margin: 0
+                              }}
+                            >
+                              <FontAwesomeIcon icon={faUpload} />
+                              Importar Datos
+                              <input 
+                                type="file" 
+                                accept=".json"
+                                onChange={handleImportData}
+                                style={{ display: 'none' }}
+                              />
+                            </label>
+                            
+                            <button 
+                              onClick={handleRestoreInitialData} 
+                              className="restore-button"
+                              style={{ backgroundColor: '#dc3545' }}
+                            >
+                              Restaurar Datos Iniciales
+                            </button>
+                          </div>
+                          
+                          {/* Environment Info */}
+                          <div style={{ 
+                            marginTop: '15px', 
+                            padding: '10px', 
+                            backgroundColor: '#f8f9fa', 
+                            borderRadius: '5px',
+                            fontSize: '12px',
+                            color: '#6c757d'
+                          }}>
+                            <p><strong>Entorno:</strong> {backendAvailable ? 'Con backend disponible' : 'Sin backend (solo lectura)'}</p>
+                            <p><strong>API URL:</strong> {apiBaseUrl}</p>
+                            {!backendAvailable && (
+                              <p>
+                                <strong>Nota:</strong> Los datos se guardan localmente en su navegador. 
+                                Para guardar permanentemente en el archivo accidents.json, inicie el servidor backend: <code>npm run backend</code>.
+                              </p>
+                            )}
+                            
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Form Panel */}
+                  {showForm && (
+                    <div className="floating-panel form-panel">
+                      <div className="panel-header">
+                        <h2>Agregar Nuevo Incidente</h2>
+                        <button className="close-button" onClick={toggleForm}>
+                          <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                      </div>
+                      <div className="form-content">
+                        <SensorForm onAddSensor={handleAddAccident} />
+                      </div>
+                    </div>
+                  )}
+                </>
+              } />
+              
+              <Route path="/proteccion-civil" element={
+                <>
+                  <MapComponent 
+                    sensors={accidents} 
+                    userLocation={userLocation}
+                    onLocationFound={handleLocationFound}
+                    mapView="civil-protection"
+                  />
+                  
+                  {/* Floating Buttons */}
+                  <div className="floating-buttons">
+                    <button 
+                      className={`floating-button legend-button ${showLegend ? 'active' : ''}`}
+                      onClick={toggleLegend}
+                      title="Mostrar/Ocultar Leyenda"
+                    >
+                      <FontAwesomeIcon icon={faInfoCircle} />
+                    </button>
+                    
+                    <button 
+                      className={`floating-button form-button ${showForm ? 'active' : ''}`}
+                      onClick={toggleForm}
+                      title="Agregar Incidente"
+                    >
+                      <FontAwesomeIcon icon={faPlus} />
+                    </button>
+                    
+                    {/* Location Button */}
+                    <button 
+                      className="floating-button"
+                      onClick={requestUserLocation}
+                      title="Obtener Mi Ubicación"
+                      style={{
+                        backgroundColor: '#28a745'
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faLocationArrow} />
+                    </button>
+                    
+                    {/* 🌤️ Botón del clima */}
+                    <button
+                      onClick={() => setMostrarClima(!mostrarClima)}
+                      style={{
+                        position: 'absolute',
+                        top: '170px',
+                        right: 0,
+                        backgroundColor: '#4285f4',
+                        color: 'white',
+                        borderRadius: '50% 0 0 50%',
+                        width: '50px',
+                        height: '50px',
+                        border: '2px solid #ffffff',
+                        fontSize: '1.5em',
+                        cursor: 'pointer',
+                        boxShadow: '0 6px 15px rgba(66, 133, 244, 0.4)',
+                        zIndex: 1001,
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        outline: 'none',
+                        transform: 'scale(1)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#3367d6';
+                        e.target.style.transform = 'scale(1.1)';
+                        e.target.style.boxShadow = '0 8px 20px rgba(66, 133, 244, 0.6)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = '#4285f4';
+                        e.target.style.transform = 'scale(1)';
+                        e.target.style.boxShadow = '0 6px 15px rgba(66, 133, 244, 0.4)';
+                      }}
+                      onMouseDown={(e) => {
+                        e.target.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        e.target.style.transform = 'scale(1.1)';
+                      }}
+                    >
+                      🌤️
+                    </button>
+                    
+                    {/* View Toggle Buttons - Moved below weather button */}
+                    <ViewToggleButtons currentView={mapView} />
+                  </div>
+                  
+                  {/* Widget del clima */}
+                  {mostrarClima && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '170px',
+                        right: '1em',
+                        background: 'white',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                        zIndex: 1001,
                         border: '1px solid #e0e0e0',
                         maxWidth: '400px',
                         width: '90%',

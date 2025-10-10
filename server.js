@@ -117,8 +117,13 @@ app.post('/api/accidents', (req, res) => {
     const accidents = readAccidentsData();
     console.log('Current accidents count:', accidents.length);
     
-    // Add new accident
-    accidents.push(newAccident);
+    // Add new accident with an ID if it doesn't have one
+    const accidentWithId = {
+      ...newAccident,
+      id: newAccident.id || Date.now() // Use existing ID or generate a new one
+    };
+    
+    accidents.push(accidentWithId);
     console.log('New accidents count:', accidents.length);
     
     // Save updated accidents data
@@ -128,7 +133,8 @@ app.post('/api/accidents', (req, res) => {
       console.log('Accident saved successfully');
       res.json({ 
         success: true, 
-        message: 'Incidente guardado exitosamente' 
+        message: 'Incidente guardado exitosamente',
+        data: accidentWithId // Return the added accident data
       });
     } else {
       console.error('Failed to save accident data');

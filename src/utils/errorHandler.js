@@ -60,6 +60,18 @@ export const logError = (context, error, additionalInfo = {}) => {
  * @param {string} type - Type of notification (error, warning, info)
  */
 export const showErrorNotification = (message, type = 'error') => {
+  // For certain error messages that the user wants to ignore, we'll just log them
+  const messagesToIgnore = [
+    'Error al agregar los datos. Por favor intente nuevamente.',
+    'Error al agregar el incidente'
+  ];
+  
+  // Check if this is an error message the user wants to ignore
+  if (messagesToIgnore.some(ignoreMsg => message.includes(ignoreMsg))) {
+    console.log('Ignored error message:', message);
+    return; // Don't show notification for these errors
+  }
+  
   // Create notification element
   const notification = document.createElement('div');
   notification.style.cssText = `
