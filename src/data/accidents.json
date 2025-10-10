@@ -4,7 +4,7 @@
     "municipio": "Tetela de Ocampo",
     "fecha": "2025-10-09",
     "hora": "02:00",
-    "tipo": "Inundaci贸n",
+    "tipo": "Inundaci髇",
     "descripcion": "dgdsgfd",
     "coordenadas": [
       -97.80661555852463,
@@ -22,7 +22,7 @@
     "municipio": "Tetela de Ocampo",
     "fecha": "2025-10-10",
     "hora": "02:01",
-    "tipo": "Inundaci贸n",
+    "tipo": "Inundaci髇",
     "descripcion": "fsafdsafdsa",
     "coordenadas": [
       -97.80673617850975,
@@ -40,7 +40,7 @@
     "municipio": "Tetela dfse Ocampo",
     "fecha": "2025-10-10",
     "hora": "02:01",
-    "tipo": "Inundaci贸n",
+    "tipo": "Inundaci髇",
     "descripcion": "fdsfdsfd",
     "coordenadas": [
       -97.80671176551684,
@@ -58,7 +58,7 @@
     "municipio": "Tetela de Ocampo",
     "fecha": "2025-10-10",
     "hora": "14:01",
-    "tipo": "Inundaci贸n",
+    "tipo": "Inundaci髇",
     "descripcion": "ffdsafds",
     "coordenadas": [
       -97.80661555852463,
@@ -88,5 +88,23 @@
     "telefono": "7845878995",
     "id": 1760086442026,
     "createdAt": "2025-10-10T08:54:02.026Z"
+  },
+  {
+    "nombre": "GitHub Integration Test",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2025-10-10",
+    "hora": "03:29",
+    "tipo": "Prueba",
+    "descripcion": "Test report to verify GitHub integration",
+    "coordenadas": [
+      -97.806587,
+      19.817965
+    ],
+    "nivel_riesgo": "Bajo",
+    "afectados": 0,
+    "localidad": "centro",
+    "telefono": "0987654321",
+    "id": 1760088547435,
+    "createdAt": "2025-10-10T09:29:07.435Z"
   }
 ]
