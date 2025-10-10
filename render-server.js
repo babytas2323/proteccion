@@ -10,41 +10,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3004;
+const PORT = process.env.PORT || 10000;
 
-// Enable CORS with specific options
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Allow localhost requests
-    if (origin.startsWith('http://localhost') || origin.startsWith('https://localhost')) {
-      return callback(null, true);
-    }
-    
-    // Allow requests from Vercel (if you're deploying there)
-    if (origin.includes('vercel.app')) {
-      return callback(null, true);
-    }
-    
-    // For production, you might want to add your domain here
-    callback(null, true); // Temporarily allow all origins for development
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
-}));
-
-// Handle preflight requests
-app.options('*', cors());
-
-// Serve static files from the public directory
-app.use(express.static('public'));
+// Enable CORS for all origins
+app.use(cors());
 
 // Middleware to parse JSON with increased size limit
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve static files from the dist directory (frontend build)
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // Path to accidents data file
 const accidentsFilePath = path.join(__dirname, 'src/data/accidents.json');
@@ -89,7 +65,7 @@ const writeAccidentsData = (data) => {
   }
 };
 
-// Route for getting accidents data
+// API Routes
 app.get('/api/accidents', (req, res) => {
   try {
     console.log('GET /api/accidents request received');
@@ -231,6 +207,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Serve the frontend for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist/index.html'));
+});
+
 // Handle 404 errors
 app.use((req, res) => {
   res.status(404).json({
@@ -248,29 +229,9 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Start the server with better error handling
-const startServer = (port) => {
-  const server = app.listen(port, '0.0.0.0', () => {
-    console.log(`🚀 Servidor backend corriendo en http://localhost:${port}`);
-    console.log(`📁 Directorio de imágenes: public/images/`);
-    console.log(`📄 Archivo de datos: ${accidentsFilePath}`);
-    console.log(`🏥 Health check endpoint: http://localhost:${port}/api/health`);
-  });
-
-  // Handle server errors
-  server.on('error', (error) => {
-    if (error.code === 'EADDRINUSE') {
-      console.log(`Puerto ${port} está en uso, intentando con el puerto ${port + 1}...`);
-      setTimeout(() => {
-        server.close();
-        startServer(port + 1);
-      }, 1000);
-    } else {
-      console.error('Error del servidor:', error);
-    }
-  });
-};
-
-startServer(PORT);
-
-export default app;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor Render corriendo en http://localhost:${PORT}`);
+  console.log(`📁 Directorio de archivos: ${__dirname}`);
+  console.log(`📄 Archivo de datos: ${accidentsFilePath}`);
+  console.log(`🏥 Health check endpoint: http://localhost:${PORT}/api/health`);
+});

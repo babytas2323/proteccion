@@ -161,3 +161,58 @@ This guide will help you deploy the Tetela Radar application with both frontend 
    - Test restore procedures
 
 This deployment guide should help you get your Tetela Radar application running in a production environment with external services.
+
+# Deployment Instructions for Render
+
+## Deploying to Render
+
+This application is configured to deploy to Render using the render.yaml file.
+
+### Steps to Deploy:
+
+1. Push your code to your GitHub repository
+2. Connect your GitHub repository to Render
+3. Select "Web Service" when prompted
+4. Render will automatically detect the render.yaml file and use its configuration
+
+### Configuration Details:
+
+- **Build Command**: `npm install && npm run build`
+- **Start Command**: `node render-server.js`
+- **Port**: Render will automatically set the PORT environment variable
+
+### Environment Variables:
+
+The application will automatically use the PORT environment variable provided by Render.
+
+### How it Works:
+
+1. During the build process, the React frontend is built into the `dist/` directory
+2. The `render-server.js` file serves both the API endpoints and the frontend static files
+3. All API requests are handled by the Node.js server
+4. All other requests serve the React frontend
+
+### Data Storage:
+
+Data is stored in the `src/data/accidents.json` file, which will persist between deploys as long as you don't clear the filesystem.
+
+### Troubleshooting:
+
+If you encounter issues:
+1. Check the build logs in the Render dashboard
+2. Check the runtime logs for any errors
+3. Ensure the PORT environment variable is being used correctly
+4. Verify that the `src/data` directory has proper write permissions
+
+### Local Development vs Production:
+
+- **Local Development**: API runs on `http://localhost:3004`
+- **Production**: API runs on the same domain as the frontend (relative paths)
+
+The application automatically detects when it's running in production and adjusts the API calls accordingly.
+
+## Your Deployed Application
+
+Your application is now deployed at: https://proteccion-v6o1.onrender.com
+
+All data will be stored in the accidents.json file on the Render server and will be accessible to all users who visit your application.

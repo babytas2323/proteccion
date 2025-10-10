@@ -45,7 +45,7 @@ function App() {
   const [backendAvailable, setBackendAvailable] = useState(false);
   const [mapView, setMapView] = useState('public'); // 'public' or 'civil-protection'
 
-  const [apiBaseUrl] = useState('http://localhost:3004');
+  const [apiBaseUrl] = useState(process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3004');
   const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
