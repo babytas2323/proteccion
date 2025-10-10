@@ -1,4 +1,21 @@
 [
  
- 
+  {
+    "nombre": "defcon ",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2025-10-10",
+    "hora": "02:01",
+    "tipo": "Inundación",
+    "descripcion": "fsafdsafdsa",
+    "coordenadas": [
+      -97.80673617850975,
+      19.81819119826171
+    ],
+    "nivel_riesgo": "Bajo",
+    "afectados": 4,   
+    "localidad": "el puerto",
+    "telefono": "7845874587",
+    "id": 1760058721058,
+    "createdAt": "2025-10-10T01:12:01.058Z"
+  }
 ]

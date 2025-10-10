@@ -27,7 +27,6 @@ const readAccidentsData = async () => {
 const writeAccidentsData = async (data) => {
   try {
     console.log('Writing accidents data to:', accidentsFilePath);
-    
     // Ensure directory exists
     const dir = path.dirname(accidentsFilePath);
     await fs.mkdir(dir, { recursive: true });
