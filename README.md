@@ -1,7 +1,3 @@
-
-Enfoque 1: Usar un servicio backend simple (recomendado)
-La mejor manera de guardar directamente en un archivo JSON es crear un servicio backend mínimo. Para ello, crearé un servicio Node.js simple:
-
 # Tetela Radar - Sistema de Detección de Riesgos
 
 Sistema de monitoreo y reporte de riesgos naturales para Tetela de Ocampo, Puebla.
@@ -29,6 +25,20 @@ Tetela Radar es una aplicación web que permite:
 - Almacenamiento directo en el archivo `src/data/accidents.json`
 - API RESTful para gestión de datos
 - Fácil de ejecutar y mantener
+
+## Alternativas de Persistencia de Datos
+
+### 1. Servicio Backend Simple (Recomendado)
+La mejor manera de guardar directamente en un archivo JSON es crear un servicio backend mínimo. Para ello, se ha creado un servicio Node.js simple.
+
+### 2. Integración con GitHub (Nueva Opción)
+Para aquellos que prefieren no ejecutar un servidor local, se ha implementado una integración con GitHub que permite almacenar los datos directamente en un repositorio de GitHub. Esta opción:
+- No requiere ejecutar un servidor local
+- Proporciona almacenamiento permanente en la nube
+- Ofrece control de versiones de los datos
+- Permite acceso colaborativo
+
+Consulte [GITHUB_INTEGRATION.md](./GITHUB_INTEGRATION.md) para obtener más detalles sobre cómo configurar esta opción.
 
 ## Requisitos
 

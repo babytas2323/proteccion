@@ -6,6 +6,7 @@ import MapComponent from './components/MapComponent';
 import SensorForm from './components/SensorForm';
 import ErrorBoundary from './components/ErrorBoundary';
 import { formatErrorMessage, logError, showErrorNotification, handleApiError } from './utils/errorHandler';
+import { loadFromGitHub, saveToGitHub, isGitHubAvailable } from './utils/githubHandler';
 import './App.css';
 
 // Import xlsx library for Excel export
@@ -20,10 +21,21 @@ function App() {
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [githubAvailable, setGithubAvailable] = useState(false);
   const [apiBaseUrl] = useState('http://localhost:3004');
   const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // GitHub configuration
+  const GITHUB_CONFIG = {
+    owner: 'babytas2323',
+    repo: 'proteccion',
+    path: 'src/data/accidents.json',
+    branch: 'main',
+    // Note: In a production app, this token should be secured properly
+    token: '' // Will be empty for public access, but can be added if needed
+  };
 
   // Function to get risk level from accident data
   const getRiskLevel = (accident) => {
@@ -68,12 +80,86 @@ function App() {
     return false;
   };
 
+  // Sync local data with backend when it comes back online
+  const syncLocalDataWithBackend = async () => {
+    try {
+      // Get local data from localStorage
+      const localData = localStorage.getItem('tetela-accidents');
+      if (localData) {
+        const accidentsData = JSON.parse(localData);
+        
+        // If there's local data and backend is now available, sync it
+        if (accidentsData.length > 0) {
+          const isBackendAvailable = await checkBackendAvailability();
+          if (isBackendAvailable) {
+            // Send each local accident to the backend
+            let syncSuccess = true;
+            for (const accident of accidentsData) {
+              // Skip accidents that already have IDs from the backend
+              if (!accident.id || typeof accident.id !== 'number') {
+                try {
+                  const response = await fetch(`${apiBaseUrl}/api/accidents`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(accident),
+                  });
+                  
+                  if (!response.ok) {
+                    syncSuccess = false;
+                    console.error('Failed to sync accident:', accident);
+                  }
+                } catch (error) {
+                  syncSuccess = false;
+                  console.error('Error syncing accident:', error);
+                }
+              }
+            }
+            
+            if (syncSuccess) {
+              // Clear local storage after successful sync
+              localStorage.removeItem('tetela-accidents');
+              showErrorNotification('Datos locales sincronizados con el servidor exitosamente!', 'info');
+              
+              // Reload data from backend
+              const response = await fetch(`${apiBaseUrl}/api/accidents`);
+              if (response.ok) {
+                const data = await response.json();
+                setAccidents(data);
+              }
+            } else {
+              showErrorNotification('Algunos datos locales no se pudieron sincronizar. Intente más tarde.', 'warning');
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logError('Syncing local data with backend', error);
+      showErrorNotification('Error al sincronizar datos locales con el servidor.', 'error');
+    }
+  };
+
   // Load accidents data when component mounts
   useEffect(() => {
     const loadAccidentsData = async () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // Check if GitHub is available and try to load from there first
+        try {
+          const isGHAvailable = await isGitHubAvailable();
+          if (isGHAvailable) {
+            const githubData = await loadFromGitHub();
+            setAccidents(githubData);
+            setGithubAvailable(true);
+            showErrorNotification('Datos cargados desde GitHub.', 'info');
+            return;
+          }
+        } catch (githubError) {
+          console.log('GitHub not available, checking local backend');
+        }
         
         // Check if backend is available
         const isBackendAvailable = await checkBackendAvailability();
@@ -84,6 +170,9 @@ function App() {
           if (response.ok) {
             const data = await response.json();
             setAccidents(data);
+            
+            // Try to sync any local data that might exist
+            await syncLocalDataWithBackend();
           } else {
             throw new Error(`Error al cargar datos: ${response.status} ${response.statusText}`);
           }
@@ -137,6 +226,30 @@ function App() {
           showErrorNotification(errorMessage);
           return false;
         }
+      } else if (githubAvailable) {
+        // Save to GitHub if available
+        try {
+          const updatedAccidents = [...accidents, {...newAccident, id: Date.now()}];
+          await saveToGitHub(updatedAccidents);
+          setAccidents(updatedAccidents);
+          setShowForm(false);
+          showErrorNotification('Reporte de incidente guardado permanentemente en GitHub!', 'info');
+          return true;
+        } catch (error) {
+          // Fallback to localStorage if GitHub fails
+          const updatedAccidents = [...accidents, {...newAccident, id: Date.now()}];
+          setAccidents(updatedAccidents);
+          try {
+            localStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
+            console.log('Accidents saved to localStorage as fallback');
+          } catch (error) {
+            logError('Saving to localStorage', error);
+            showErrorNotification('Error al guardar datos localmente.');
+          }
+          setShowForm(false);
+          showErrorNotification('Reporte de incidente agregado localmente. Error al guardar en GitHub.', 'warning');
+          return true;
+        }
       } else {
         // Fallback to localStorage if backend is not available
         const updatedAccidents = [...accidents, {...newAccident, id: Date.now()}];
@@ -149,7 +262,7 @@ function App() {
           showErrorNotification('Error al guardar datos localmente.');
         }
         setShowForm(false);
-        showErrorNotification('Reporte de incidente agregado localmente. Para guardar permanentemente inicie el servidor backend.', 'warning');
+        showErrorNotification('Reporte de incidente agregado localmente. Para guardar permanentemente inicie el servidor backend o use GitHub.', 'warning');
         return true;
       }
     } catch (error) {
@@ -585,12 +698,17 @@ function App() {
                             fontSize: '12px',
                             color: '#6c757d'
                           }}>
-                            <p><strong>Entorno:</strong> {backendAvailable ? 'Con backend disponible' : 'Sin backend (solo lectura)'}</p>
+                            <p><strong>Entorno:</strong> {backendAvailable ? 'Con backend disponible' : (githubAvailable ? 'Con GitHub disponible' : 'Sin backend (solo lectura)')}</p>
                             <p><strong>API URL:</strong> {apiBaseUrl}</p>
-                            {!backendAvailable && (
+                            {!backendAvailable && !githubAvailable && (
                               <p>
                                 <strong>Nota:</strong> Los datos se guardan localmente en su navegador. 
-                                Para guardar permanentemente en el archivo accidents.json, inicie el servidor backend: <code>npm run backend</code>
+                                Para guardar permanentemente en el archivo accidents.json, inicie el servidor backend: <code>npm run backend</code> o use la integración de GitHub.
+                              </p>
+                            )}
+                            {githubAvailable && (
+                              <p>
+                                <strong>GitHub:</strong> Los datos se guardan permanentemente en el repositorio de GitHub.
                               </p>
                             )}
                           </div>
