@@ -13,7 +13,33 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Enable CORS for all origins
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost requests
+    if (origin.startsWith('http://localhost') || origin.startsWith('https://localhost')) {
+      return callback(null, true);
+    }
+    
+    // Allow requests from Vercel
+    if (origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Allow requests from Render
+    if (origin.includes('onrender.com')) {
+      return callback(null, true);
+    }
+    
+    // For production, you might want to add your domain here
+    callback(null, true); // Temporarily allow all origins for development
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+}));
 
 // Middleware to parse JSON with increased size limit
 app.use(express.json({ limit: '10mb' }));

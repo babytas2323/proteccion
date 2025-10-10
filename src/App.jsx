@@ -45,7 +45,8 @@ function App() {
   const [backendAvailable, setBackendAvailable] = useState(false);
   const [mapView, setMapView] = useState('public'); // 'public' or 'civil-protection'
 
-  const [apiBaseUrl] = useState(process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3004');
+  // Use the Render backend URL directly in production
+  const [apiBaseUrl] = useState(process.env.NODE_ENV === 'production' ? 'https://proteccion-v6o1.onrender.com' : 'http://localhost:3004');
   const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -96,13 +97,15 @@ function App() {
   // Check if backend is available
   const checkBackendAvailability = async () => {
     try {
+      console.log('Checking backend availability at:', `${apiBaseUrl}/api/health`);
       const response = await fetch(`${apiBaseUrl}/api/health`);
+      console.log('Health check response status:', response.status);
       if (response.ok) {
         setBackendAvailable(true);
         return true;
       }
     } catch (error) {
-      console.log('Backend not available');
+      console.log('Backend not available:', error);
     }
     setBackendAvailable(false);
     return false;
@@ -180,9 +183,12 @@ function App() {
         
         if (isBackendAvailable) {
           // Load from backend
+          console.log('Loading accidents from backend at:', `${apiBaseUrl}/api/accidents`);
           const response = await fetch(`${apiBaseUrl}/api/accidents`);
+          console.log('Accidents API response status:', response.status);
           if (response.ok) {
             const data = await response.json();
+            console.log('Accidents data loaded:', data);
             setAccidents(data);
             
             // Try to sync any local data that might exist
@@ -197,6 +203,7 @@ function App() {
           showErrorNotification('Trabajando en modo sin conexión. Los datos se guardarán localmente.', 'info');
         }
       } catch (error) {
+        console.error('Error loading accidents data:', error);
         logError('Loading accidents data', error);
         setError(formatErrorMessage(error));
         // Fallback to local data in case of error
