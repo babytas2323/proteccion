@@ -438,14 +438,40 @@ const MapComponent = ({ sensors, userLocation, onLocationFound }) => {
                 </div>
                 
                 {/* Display images if available */}
-                {(point.imagenes || point.Imagenes || point.imagePath) && (
+                {(point.imagenes || point.Imagenes || point.imagePath || point.image) && (
                   <div style={{ 
                     marginTop: '10px',
                     borderTop: '1px solid #eee',
                     paddingTop: '10px'
                   }}>
+                    {/* Display single image if image (base64) exists */}
+                    {point.image && (
+                      <div>
+                        <FontAwesomeIcon icon={faImage} style={{ marginRight: '5px' }} />
+                        <strong>Imagen del incidente:</strong>
+                        <img 
+                          src={point.image} 
+                          alt="Imagen del incidente" 
+                          onError={(e) => {
+                            // Handle image loading errors
+                            console.error('Failed to load image:', point.image);
+                            e.target.style.display = 'none';
+                            showErrorNotification('Error al cargar imagen del incidente.');
+                          }}
+                          style={{ 
+                            width: '100%', 
+                            maxHeight: '150px', 
+                            objectFit: 'cover', 
+                            borderRadius: '8px',
+                            border: '1px solid #ddd',
+                            marginTop: '5px'
+                          }}
+                        />
+                      </div>
+                    )}
+                    
                     {/* Display single image if imagePath exists */}
-                    {point.imagePath && (
+                    {point.imagePath && !point.image && (
                       <div>
                         <FontAwesomeIcon icon={faImage} style={{ marginRight: '5px' }} />
                         <strong>Imagen del incidente:</strong>

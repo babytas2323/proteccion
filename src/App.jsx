@@ -182,30 +182,43 @@ function App() {
       const isBackendAvailable = await checkBackendAvailability();
       
       if (isBackendAvailable) {
-        // If there's an image, use FormData to send both accident data and image
+        // If there's an image, convert it to base64 and add it to the accident data
         if (imageFile) {
-          const formData = new FormData();
-          formData.append('image', imageFile);
-          formData.append('accident', JSON.stringify(newAccident));
-          
-          const response = await fetch(`${apiBaseUrl}/api/accidents`, {
-            method: 'POST',
-            body: formData,
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            // Add to local state
-            const updatedAccidents = [...accidents, result.data];
-            setAccidents(updatedAccidents);
-            setShowForm(false);
-            showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
-            return true;
-          } else {
-            const errorMessage = await handleApiError(response);
-            showErrorNotification(errorMessage);
-            return false;
-          }
+          // Convert image to base64
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const base64Image = e.target.result;
+            
+            // Add base64 image to accident data
+            const accidentWithImage = {
+              ...newAccident,
+              image: base64Image
+            };
+            
+            // Save to backend
+            const response = await fetch(`${apiBaseUrl}/api/accidents`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(accidentWithImage),
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              // Add to local state
+              const updatedAccidents = [...accidents, result.data];
+              setAccidents(updatedAccidents);
+              setShowForm(false);
+              showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
+              return true;
+            } else {
+              const errorMessage = await handleApiError(response);
+              showErrorNotification(errorMessage);
+              return false;
+            }
+          };
+          reader.readAsDataURL(imageFile);
         } else {
           // Save to backend without image
           const response = await fetch(`${apiBaseUrl}/api/accidents`, {

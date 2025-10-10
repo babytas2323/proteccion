@@ -49,5 +49,24 @@
     "id": 1760096687297,
     "createdAt": "2025-10-10T11:44:47.297Z",
     "imagePath": "/uploads/image-1760096687287-299914235.jpg"
+  },
+  {
+    "nombre": "ffffffffffffffffffffffffffff",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2025-10-10",
+    "hora": "02:01",
+    "tipo": "Huracán",
+    "descripcion": "bbfdbfgd",
+    "coordenadas": [
+      -97.80683423697157,
+      19.818384795898915
+    ],
+    "nivel_riesgo": "Alto",
+    "afectados": 4,
+    "localidad": "bfgdbgf",
+    "telefono": "1234567891",
+    "id": 1760096979609,
+    "createdAt": "2025-10-10T11:49:39.609Z",
+    "imagePath": "/uploads/image-1760096979597-483051963.jpg"
   }
 ]
