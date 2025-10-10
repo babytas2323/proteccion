@@ -93,7 +93,7 @@
     "nombre": "GitHub Integration Test",
     "municipio": "Tetela de Ocampo",
     "fecha": "2025-10-10",
-    "hora": "03:29",
+    "hora": "03:33",
     "tipo": "Prueba",
     "descripcion": "Test report to verify GitHub integration",
     "coordenadas": [
@@ -104,7 +104,7 @@
     "afectados": 0,
     "localidad": "centro",
     "telefono": "0987654321",
-    "id": 1760088579276,
-    "createdAt": "2025-10-10T09:29:39.276Z"
+    "id": 1760088799539,
+    "createdAt": "2025-10-10T09:33:19.539Z"
   }
 ]
