@@ -157,45 +157,8 @@ app.post('/api/accidents/restore', (req, res) => {
   try {
     console.log('POST /api/accidents/restore request received');
     
-    // Read initial data from a backup file or hardcoded data
-    const initialData = [
-      {
-        "id": 1,
-        "nombre": "Huracán Patricia",
-        "municipio": "Tetela de Ocampo",
-        "fecha": "2023-10-23",
-        "hora": "14:30",
-        "tipo": "Huracán",
-        "descripcion": "Fuertes vientos y lluvias intensas afectaron la región",
-        "coordenadas": [
-          -97.8096,
-          19.8116
-        ],
-        "nivel_riesgo": "high",
-        "afectados": 15,
-        "brigada_asignada": "Brigada de Emergencia 1",
-        "imagenes": [],
-        "type": "accident"
-      },
-      {
-        "id": 2,
-        "nombre": "Inundación por tormenta",
-        "municipio": "Tetela de Ocampo",
-        "fecha": "2023-09-15",
-        "hora": "08:45",
-        "tipo": "Inundación",
-        "descripcion": "Inundación en la calle principal por tormenta severa",
-        "coordenadas": [
-          -97.815,
-          19.808
-        ],
-        "nivel_riesgo": "medium",
-        "afectados": 8,
-        "brigada_asignada": "Brigada de Rescate 2",
-        "imagenes": [],
-        "type": "accident"
-      }
-    ];
+    // Empty initial data
+    const initialData = [];
     
     // Save initial data
     const success = writeAccidentsData(initialData);
@@ -204,7 +167,8 @@ app.post('/api/accidents/restore', (req, res) => {
       console.log('Initial data restored successfully');
       res.json({ 
         success: true, 
-        message: 'Datos iniciales restaurados exitosamente' 
+        message: 'Datos iniciales restaurados exitosamente',
+        data: initialData
       });
     } else {
       console.error('Failed to restore initial data');
