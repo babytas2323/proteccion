@@ -1,0 +1,12 @@
+{
+  "nombre": "Prueba de Terremoto",
+  "municipio": "Tetela de Ocampo",
+  "fecha": "2025-10-10",
+  "hora": "12:00",
+  "tipo": "Terremoto",
+  "descripcion": "Terremoto de prueba para verificar la API",
+  "coordenadas": [-97.81, 19.81],
+  "nivel_riesgo": "high",
+  "afectados": 5,
+  "brigada_asignada": "Brigada de Prueba"
+}

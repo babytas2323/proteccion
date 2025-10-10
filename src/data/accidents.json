@@ -1,4 +1,86 @@
 [
- 
- 
+  {
+    "id": 1,
+    "nombre": "Huracán Patricia",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2023-10-23",
+    "hora": "14:30",
+    "tipo": "Huracán",
+    "descripcion": "Fuertes vientos y lluvias intensas afectaron la región",
+    "coordenadas": [
+      -97.8096,
+      19.8116
+    ],
+    "nivel_riesgo": "high",
+    "afectados": 15,
+    "brigada_asignada": "Brigada de Emergencia 1"
+  },
+  {
+    "id": 2,
+    "nombre": "Inundación por tormenta",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2023-09-15",
+    "hora": "08:45",
+    "tipo": "Inundación",
+    "descripcion": "Inundación en la calle principal por tormenta severa",
+    "coordenadas": [
+      -97.815,
+      19.808
+    ],
+    "nivel_riesgo": "medium",
+    "afectados": 8,
+    "brigada_asignada": "Brigada de Rescate 2"
+  },
+  {
+    "nombre": "Prueba de Terremoto",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2025-10-10",
+    "hora": "12:00",
+    "tipo": "Terremoto",
+    "descripcion": "Terremoto de prueba para verificar la API",
+    "coordenadas": [
+      -97.81,
+      19.81
+    ],
+    "nivel_riesgo": "high",
+    "afectados": 5,
+    "brigada_asignada": "Brigada de Prueba",
+    "id": 1760092860663,
+    "createdAt": "2025-10-10T10:41:00.663Z"
+  },
+  {
+    "nombre": "Prueba de Terremoto",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2025-10-10",
+    "hora": "12:00",
+    "tipo": "Terremoto",
+    "descripcion": "Terremoto de prueba para verificar la API",
+    "coordenadas": [
+      -97.81,
+      19.81
+    ],
+    "nivel_riesgo": "high",
+    "afectados": 5,
+    "brigada_asignada": "Brigada de Prueba",
+    "id": 1760092866596,
+    "createdAt": "2025-10-10T10:41:06.596Z"
+  },
+  {
+    "nombre": "gfdgfd",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2025-10-10",
+    "hora": "14:00",
+    "tipo": "Huracán",
+    "descripcion": "gdgfd",
+    "coordenadas": [
+      -97.80683423697157,
+      19.818384795898915
+    ],
+    "nivel_riesgo": "Bajo",
+    "afectados": 3,
+    "localidad": "gfdgfd",
+    "telefono": "1234567890",
+    "id": 1760094463238,
+    "createdAt": "2025-10-10T11:07:43.238Z"
+  }
 ]

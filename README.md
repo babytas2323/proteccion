@@ -26,20 +26,6 @@ Tetela Radar es una aplicación web que permite:
 - API RESTful para gestión de datos
 - Fácil de ejecutar y mantener
 
-## Alternativas de Persistencia de Datos
-
-### 1. Servicio Backend Simple (Recomendado)
-La mejor manera de guardar directamente en un archivo JSON es crear un servicio backend mínimo. Para ello, se ha creado un servicio Node.js simple.
-
-### 2. Integración con GitHub (Nueva Opción)
-Para aquellos que prefieren no ejecutar un servidor local, se ha implementado una integración con GitHub que permite almacenar los datos directamente en un repositorio de GitHub. Esta opción:
-- No requiere ejecutar un servidor local
-- Proporciona almacenamiento permanente en la nube
-- Ofrece control de versiones de los datos
-- Permite acceso colaborativo
-
-Consulte [GITHUB_INTEGRATION.md](./GITHUB_INTEGRATION.md) para obtener más detalles sobre cómo configurar esta opción.
-
 ## Requisitos
 
 - Node.js (versión 14 o superior)
@@ -83,36 +69,6 @@ Si no inicias el backend, la aplicación funcionará en modo offline:
 - Los datos se guardarán en el localStorage del navegador
 - No se guardarán directamente en el archivo accidents.json
 - Se mostrará un mensaje indicando que se necesita iniciar el backend
-
-### Modo de Producción
-
-```bash
-# Construir la aplicación para producción
-npm run build
-
-# Servir la versión construida localmente
-npm run preview
-```
-
-## Funcionalidades
-
-### Reporte de Incidentes
-- Formulario para reportar incidentes de riesgos naturales
-- Validación de datos
-- Geolocalización automática (opcional)
-- Niveles de riesgo (bajo, medio, alto)
-
-### Visualización en Mapa
-- Mapa interactivo con marcadores de incidentes
-- Colores codificados por nivel de riesgo
-- Información detallada en popups
-
-### Gestión de Datos
-- Almacenamiento automático en el archivo accidents.json (con backend)
-- Fallback a localStorage cuando el backend no está disponible
-- Exportación de datos a archivo JSON
-- Importación de datos desde archivo JSON
-- Restauración de datos iniciales
 
 ## Scripts Disponibles
 
@@ -169,7 +125,7 @@ tetela-radar/
 
 ## Recomendaciones
 
-1. **Iniciar el Backend**: Siempre inicia el backend para guardar datos permanentemente
+1. **Iniciar el Backend**: Para guardar datos permanentemente, inicia el backend
 2. **Backup Regular**: Haz copias de seguridad del archivo accidents.json
 3. **Verificar Conexión**: Asegúrate de que el frontend puede conectar con el backend
 

@@ -6,7 +6,7 @@ import MapComponent from './components/MapComponent';
 import SensorForm from './components/SensorForm';
 import ErrorBoundary from './components/ErrorBoundary';
 import { formatErrorMessage, logError, showErrorNotification, handleApiError } from './utils/errorHandler';
-import { loadFromGitHub, saveToGitHub, isGitHubAvailable } from './utils/githubHandler';
+
 import './App.css';
 
 // Import xlsx library for Excel export
@@ -21,21 +21,11 @@ function App() {
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [backendAvailable, setBackendAvailable] = useState(false);
-  const [githubAvailable, setGithubAvailable] = useState(false);
+
   const [apiBaseUrl] = useState('http://localhost:3004');
   const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // GitHub configuration
-  const GITHUB_CONFIG = {
-    owner: 'babytas2323',
-    repo: 'proteccion',
-    path: 'src/data/accidents.json',
-    branch: 'main',
-    // Note: In a production app, this token should be secured properly
-    token: '' // Will be empty for public access, but can be added if needed
-  };
 
   // Function to get risk level from accident data
   const getRiskLevel = (accident) => {
@@ -147,19 +137,7 @@ function App() {
         setLoading(true);
         setError(null);
         
-        // Check if GitHub is available and try to load from there first
-        try {
-          const isGHAvailable = await isGitHubAvailable();
-          if (isGHAvailable) {
-            const githubData = await loadFromGitHub();
-            setAccidents(githubData);
-            setGithubAvailable(true);
-            showErrorNotification('Datos cargados desde GitHub.', 'info');
-            return;
-          }
-        } catch (githubError) {
-          console.log('GitHub not available, checking local backend');
-        }
+
         
         // Check if backend is available
         const isBackendAvailable = await checkBackendAvailability();
@@ -240,18 +218,7 @@ function App() {
           showErrorNotification('Error al guardar datos localmente.');
         }
         
-        // If GitHub is available, also try to save there
-        if (githubAvailable) {
-          try {
-            await saveToGitHub(updatedAccidents);
-            setShowForm(false);
-            showErrorNotification('Reporte de incidente guardado permanentemente en GitHub!', 'info');
-            return true;
-          } catch (error) {
-            console.error('Error saving to GitHub:', error);
-            // Continue with local save even if GitHub fails
-          }
-        }
+// Continue with local save
         
         setShowForm(false);
         showErrorNotification('Reporte de incidente agregado localmente. Para guardar permanentemente inicie el servidor backend.', 'warning');
@@ -690,19 +657,15 @@ function App() {
                             fontSize: '12px',
                             color: '#6c757d'
                           }}>
-                            <p><strong>Entorno:</strong> {backendAvailable ? 'Con backend disponible' : (githubAvailable ? 'Con GitHub disponible' : 'Sin backend (solo lectura)')}</p>
+                            <p><strong>Entorno:</strong> {backendAvailable ? 'Con backend disponible' : 'Sin backend (solo lectura)'}</p>
                             <p><strong>API URL:</strong> {apiBaseUrl}</p>
-                            {!backendAvailable && !githubAvailable && (
+                            {!backendAvailable && (
                               <p>
                                 <strong>Nota:</strong> Los datos se guardan localmente en su navegador. 
-                                Para guardar permanentemente en el archivo accidents.json, inicie el servidor backend: <code>npm run backend</code> o use la integración de GitHub.
+                                Para guardar permanentemente en el archivo accidents.json, inicie el servidor backend: <code>npm run backend</code>.
                               </p>
                             )}
-                            {githubAvailable && (
-                              <p>
-                                <strong>GitHub:</strong> Los datos se guardan permanentemente en el repositorio de GitHub.
-                              </p>
-                            )}
+                            
                           </div>
                         </div>
                       </div>
