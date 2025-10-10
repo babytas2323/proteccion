@@ -226,43 +226,35 @@ function App() {
           showErrorNotification(errorMessage);
           return false;
         }
-      } else if (githubAvailable) {
-        // Save to GitHub if available
-        try {
-          const updatedAccidents = [...accidents, {...newAccident, id: Date.now()}];
-          await saveToGitHub(updatedAccidents);
-          setAccidents(updatedAccidents);
-          setShowForm(false);
-          showErrorNotification('Reporte de incidente guardado permanentemente en GitHub!', 'info');
-          return true;
-        } catch (error) {
-          // Fallback to localStorage if GitHub fails
-          const updatedAccidents = [...accidents, {...newAccident, id: Date.now()}];
-          setAccidents(updatedAccidents);
-          try {
-            localStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
-            console.log('Accidents saved to localStorage as fallback');
-          } catch (error) {
-            logError('Saving to localStorage', error);
-            showErrorNotification('Error al guardar datos localmente.');
-          }
-          setShowForm(false);
-          showErrorNotification('Reporte de incidente agregado localmente. Error al guardar en GitHub.', 'warning');
-          return true;
-        }
       } else {
-        // Fallback to localStorage if backend is not available
+        // For offline scenarios, always save locally first
         const updatedAccidents = [...accidents, {...newAccident, id: Date.now()}];
         setAccidents(updatedAccidents);
+        
+        // Try to save to localStorage
         try {
           localStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
-          console.log('Accidents saved to localStorage as fallback');
+          console.log('Accidents saved to localStorage');
         } catch (error) {
           logError('Saving to localStorage', error);
           showErrorNotification('Error al guardar datos localmente.');
         }
+        
+        // If GitHub is available, also try to save there
+        if (githubAvailable) {
+          try {
+            await saveToGitHub(updatedAccidents);
+            setShowForm(false);
+            showErrorNotification('Reporte de incidente guardado permanentemente en GitHub!', 'info');
+            return true;
+          } catch (error) {
+            console.error('Error saving to GitHub:', error);
+            // Continue with local save even if GitHub fails
+          }
+        }
+        
         setShowForm(false);
-        showErrorNotification('Reporte de incidente agregado localmente. Para guardar permanentemente inicie el servidor backend o use GitHub.', 'warning');
+        showErrorNotification('Reporte de incidente agregado localmente. Para guardar permanentemente inicie el servidor backend.', 'warning');
         return true;
       }
     } catch (error) {

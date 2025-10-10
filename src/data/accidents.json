@@ -70,5 +70,23 @@
     "telefono": "4578954789",
     "id": 1760059144476,
     "createdAt": "2025-10-10T01:19:04.476Z"
+  },
+  {
+    "nombre": "ejemplo",
+    "municipio": "Tetela de Ocampo",
+    "fecha": "2025-10-10",
+    "hora": "15:01",
+    "tipo": "Derrumbe",
+    "descripcion": "cxz<cxz<cxz",
+    "coordenadas": [
+      -97.806587,
+      19.817965
+    ],
+    "nivel_riesgo": "Bajo",
+    "afectados": 5,
+    "localidad": "tepezintla",
+    "telefono": "7845878995",
+    "id": 1760086442026,
+    "createdAt": "2025-10-10T08:54:02.026Z"
   }
 ]
