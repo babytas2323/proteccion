@@ -343,13 +343,13 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
           </div>
           
           {/* Imagen del incidente */}
-          {incident.image && (
+          {incident.imageUrl && (
             <div style={{ marginBottom: '8px' }}>
               <p style={{ margin: '5px 0', fontSize: '14px' }}>
                 <strong>Imagen del incidente:</strong>
               </p>
               <img 
-                src={incident.image} 
+                src={incident.imageUrl} 
                 alt="Imagen del incidente" 
                 style={{ 
                   maxWidth: '100%', 
