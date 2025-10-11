@@ -5,7 +5,7 @@ import { faInfoCircle, faPlus, faTimes, faDownload, faUpload, faImage, faLocatio
 import MapComponent from './components/MapComponent';
 import SensorForm from './components/SensorForm';
 import ErrorBoundary from './components/ErrorBoundary';
-import DatabaseTest from './components/DatabaseTest';
+
 import { formatErrorMessage, logError, showErrorNotification, handleApiError } from './utils/errorHandler';
 
 // Import Firebase
@@ -120,10 +120,13 @@ function App() {
     } catch (error) {
       console.error('Error loading accidents data:', error);
       logError('Loading accidents data', error);
-      setError(formatErrorMessage(error));
+      // Provide more detailed error information
+      const errorMessage = error.message || 'Error al cargar datos.';
+      const errorCode = error.code ? ` (Code: ${error.code})` : '';
+      setError(`${errorMessage}${errorCode}`);
       // Fallback to local data in case of error
       setAccidents(initialAccidentsData);
-      showErrorNotification('Error al cargar datos. Usando datos locales.', 'warning');
+      showErrorNotification(`Error al cargar datos. Usando datos locales. ${errorMessage}${errorCode}`, 'warning');
     } finally {
       setLoading(false);
     }
@@ -157,7 +160,10 @@ function App() {
     } catch (error) {
       console.error('Error adding accident:', error);
       logError('Adding accident', error);
-      showErrorNotification('Error al agregar el incidente.', 'error');
+      // Provide more detailed error information
+      const errorMessage = error.message || 'Error al agregar el incidente.';
+      const errorCode = error.code ? ` (Code: ${error.code})` : '';
+      showErrorNotification(`${errorMessage}${errorCode}`, 'error');
       return false;
     }
   };
@@ -373,8 +379,7 @@ function App() {
           </header>
           
           <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-            {/* Database Test Component */}
-            <DatabaseTest />
+
             
             {loading && (
               <div style={{

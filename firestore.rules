@@ -1,10 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read access to accidents collection
+    // Allow public read and write access to accidents collection
     match /accidents/{document} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read, write: if true;
     }
     
     // Allow read/write access to test collection for authenticated users
