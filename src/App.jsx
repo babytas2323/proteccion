@@ -967,7 +967,9 @@ function App() {
                               style={{ backgroundColor: '#dc3545' }}
                             >
                               Restaurar Datos Iniciales
-                            </button>*/}
+                            </button>     
+                            OCULTAR BOTONES DE RESTAURACION DE DATOS
+                            */}
                           </div>
                           
                           {/* Environment Info */}
