@@ -1,49 +1,48 @@
 # Deployment Guide
 
-This guide will help you deploy the Tetela Radar application with both frontend and backend components.
+This guide will help you deploy the Tetela Radar application with Firebase Firestore as the backend.
 
-## Backend Deployment (Node.js Server)
+## Firebase Setup
 
-### Option 1: Deploy to Render (Recommended)
+### 1. Create a Firebase Project
 
-1. **Create a Render Account**
-   - Go to [render.com](https://render.com) and sign up for a free account
+1. Go to the [Firebase Console](https://console.firebase.google.com/)
+2. Click "Create a project"
+3. Enter a project name (e.g., "tetela-radar")
+4. Accept the terms and conditions
+5. Click "Create project"
 
-2. **Prepare Your Code**
-   - Push your code to a GitHub repository
-   - Make sure your repository includes:
-     - `server.js` (your main server file)
-     - `package.json` (with all dependencies)
-     - `render.yaml` (deployment configuration)
+### 2. Register Your Web App
 
-3. **Deploy on Render**
-   - Log into Render Dashboard
-   - Click "New Web Service"
-   - Connect your GitHub repository
-   - Configure settings:
-     - Name: tetela-radar-backend
-     - Environment: Node
-     - Build Command: `npm install`
-     - Start Command: `node server.js`
-     - Instance Type: Free
-   - Click "Create Web Service"
+1. In the Firebase Console, click the web icon (</>) to register a new app
+2. Enter an app nickname (e.g., "tetela-radar-web")
+3. Check "Also set up Firebase Hosting for this app" (optional)
+4. Click "Register app"
+5. Copy the Firebase configuration object - you'll need this later
 
-4. **Get Your Deployed URL**
-   - Once deployment is complete, you'll get a URL like:
-     `https://tetela-radar-backend-xxxx.onrender.com`
-   - Update this URL in your frontend code (`src/App.jsx`)
+### 3. Enable Firestore Database
 
-### Option 2: Deploy to Railway
+1. In the Firebase Console, click "Firestore Database" in the left sidebar
+2. Click "Create database"
+3. Choose "Start in test mode" (for development) or "Start in locked mode" (for production)
+4. Click "Next"
+5. Choose a location for your database
+6. Click "Enable"
 
-1. **Create a Railway Account**
-   - Go to [railway.app](https://railway.app) and sign up
+### 4. Configure Firebase in Your Application
 
-2. **Deploy**
-   - Click "New Project"
-   - Select "Deploy from GitHub repo"
-   - Choose your repository
-   - Railway will automatically detect it's a Node.js app
-   - Click "Deploy"
+1. Open `src/firebase.js` in your project
+2. Replace the placeholder configuration with your actual Firebase config:
+   ```javascript
+   const firebaseConfig = {
+     apiKey: "YOUR_API_KEY",
+     authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+     projectId: "YOUR_PROJECT_ID",
+     storageBucket: "YOUR_PROJECT_ID.appspot.com",
+     messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+     appId: "YOUR_APP_ID"
+   };
+   ```
 
 ## Frontend Deployment
 
@@ -62,8 +61,14 @@ This guide will help you deploy the Tetela Radar application with both frontend 
      - Output Directory: `dist`
    - Click "Deploy"
 
-3. **Environment Variables (if needed)**
-   - Add any environment variables in the project settings
+3. **Environment Variables**
+   - Add your Firebase configuration as environment variables in the project settings:
+     - `VITE_FIREBASE_API_KEY`
+     - `VITE_FIREBASE_AUTH_DOMAIN`
+     - `VITE_FIREBASE_PROJECT_ID`
+     - `VITE_FIREBASE_STORAGE_BUCKET`
+     - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+     - `VITE_FIREBASE_APP_ID`
 
 ### Deploy to Netlify
 
@@ -78,141 +83,94 @@ This guide will help you deploy the Tetela Radar application with both frontend 
      - Publish directory: `dist`
    - Click "Deploy site"
 
+3. **Environment Variables**
+   - Add your Firebase configuration as environment variables in the project settings
+
 ## Configuration After Deployment
 
-1. **Update API Base URL**
-   After deploying your backend, update the URL in `src/App.jsx`:
+1. **Update Firebase Configuration**
+   After deploying your Firebase project, update the configuration in `src/firebase.js` or use environment variables:
    ```javascript
-   const getApiBaseUrl = () => {
-     // In development, use localhost
-     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-       return 'http://localhost:3004';
-     }
-     
-     // For production, use your deployed backend URL
-     return 'https://your-deployed-backend-url.onrender.com'; // Replace with your actual URL
+   const firebaseConfig = {
+     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+     appId: import.meta.env.VITE_FIREBASE_APP_ID
    };
    ```
-
-2. **Environment Variables**
-   If you're using Cloudinary or other services, make sure to set the environment variables in your deployment platform:
-   - `VITE_CLOUDINARY_CLOUD_NAME`
-   - `VITE_CLOUDINARY_API_KEY`
-   - `VITE_CLOUDINARY_API_SECRET`
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **CORS Errors**
-   The server already includes CORS middleware, but if you encounter issues:
-   ```javascript
-   app.use(cors({
-     origin: ['https://your-frontend-url.vercel.app', 'https://your-frontend-url.netlify.app']
-   }));
-   ```
+1. **Firebase Configuration Errors**
+   - Make sure all configuration values are correct
+   - Check that you've enabled Firestore Database
+   - Verify that your security rules allow read/write access
 
-2. **File Upload Issues**
-   Make sure your file upload limits are appropriate:
-   ```javascript
-   app.use(express.json({ limit: '10mb' }));
-   ```
+2. **CORS Issues**
+   Firebase Firestore doesn't have CORS issues since it's accessed directly from the client
 
-3. **Database Connection**
-   If you expand to use a database, make sure to:
-   - Use environment variables for connection strings
-   - Set up connection pooling
-   - Handle connection errors gracefully
+3. **Network Errors**
+   - Check your internet connection
+   - Verify that your Firebase project is properly configured
+   - Check the browser console for specific error messages
 
 ### Monitoring
 
-- Check your deployment logs on Render/Railway for backend issues
-- Check Vercel/Netlify logs for frontend issues
-- Monitor uptime and performance
+- Check your Firebase Console for usage statistics
+- Monitor Firestore reads/writes in the Firebase Console
+- Check deployment logs on Vercel/Netlify for frontend issues
+
+## Security Considerations
+
+1. **Firestore Security Rules**
+   For production, update your Firestore security rules in the Firebase Console:
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /accidents/{document} {
+         allow read: if true;
+         allow write: if request.auth != null;
+       }
+     }
+   }
+   ```
+
+2. **Environment Variables**
+   - Never commit sensitive configuration to version control
+   - Use environment variables for all sensitive data
+   - Rotate API keys regularly
 
 ## Scaling Considerations
 
-1. **Free Tier Limitations**
-   - Render free tier has sleep-after-inactivity feature
-   - First request after sleep may be slow
+1. **Firebase Free Tier Limitations**
+   - Document reads: 50,000/day
+   - Document writes: 20,000/day
+   - Storage: 1GB
    - Consider upgrading for production use
 
-2. **Data Persistence**
-   - The current implementation uses JSON files
-   - For production, consider migrating to a database like MongoDB or PostgreSQL
-   - Use managed database services (MongoDB Atlas, Supabase, etc.)
+2. **Data Structure**
+   - The current implementation uses a simple "accidents" collection
+   - For complex queries, consider adding indexes in Firestore
 
-3. **Security**
-   - Add authentication for sensitive operations
-   - Validate and sanitize all inputs
-   - Use HTTPS in production
-   - Implement rate limiting for API endpoints
+3. **Offline Support**
+   - Firebase has built-in offline support
+   - Data will sync automatically when connectivity is restored
 
 ## Maintenance
 
 1. **Regular Updates**
-   - Keep dependencies updated
+   - Keep Firebase SDK updated
    - Monitor for security vulnerabilities
    - Test after updates
 
 2. **Backup Strategy**
-   - Regularly backup your data files
-   - Consider automated backup solutions
+   - Firebase automatically backs up your data
+   - For critical applications, consider exporting data regularly
    - Test restore procedures
 
-This deployment guide should help you get your Tetela Radar application running in a production environment with external services.
-
-# Deployment Instructions for Render
-
-## Deploying to Render
-
-This application is configured to deploy to Render using the render.yaml file.
-
-### Steps to Deploy:
-
-1. Push your code to your GitHub repository
-2. Connect your GitHub repository to Render
-3. Select "Web Service" when prompted
-4. Render will automatically detect the render.yaml file and use its configuration
-
-### Configuration Details:
-
-- **Build Command**: `npm install && npm run build`
-- **Start Command**: `node render-server.js`
-- **Port**: Render will automatically set the PORT environment variable
-
-### Environment Variables:
-
-The application will automatically use the PORT environment variable provided by Render.
-
-### How it Works:
-
-1. During the build process, the React frontend is built into the `dist/` directory
-2. The `render-server.js` file serves both the API endpoints and the frontend static files
-3. All API requests are handled by the Node.js server
-4. All other requests serve the React frontend
-
-### Data Storage:
-
-Data is stored in the `src/data/accidents.json` file, which will persist between deploys as long as you don't clear the filesystem.
-
-### Troubleshooting:
-
-If you encounter issues:
-1. Check the build logs in the Render dashboard
-2. Check the runtime logs for any errors
-3. Ensure the PORT environment variable is being used correctly
-4. Verify that the `src/data` directory has proper write permissions
-
-### Local Development vs Production:
-
-- **Local Development**: API runs on `http://localhost:3004`
-- **Production**: API runs on the same domain as the frontend (relative paths)
-
-The application automatically detects when it's running in production and adjusts the API calls accordingly.
-
-## Your Deployed Application
-
-Your application is now deployed at: https://proteccion-v6o1.onrender.com
-
-All data will be stored in the accidents.json file on the Render server and will be accessible to all users who visit your application.
+This deployment guide should help you get your Tetela Radar application running in a production environment with Firebase Firestore as the backend.

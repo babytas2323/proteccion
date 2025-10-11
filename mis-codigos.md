@@ -33,3 +33,9 @@ git commit -m "Actualizo mapa protector con cambios recientes"
 git push   
 
 /*FIN CODIGO PARA SUBIR NUEVOS CAMBIOS A GITHUB Y VERSEL*/
+
+
+/*CODIGO PARA SUBIR NUEVOS CAMBIOS A GITHUB Y VERSEL*/
+curl -s https://proteccion-v6o1.onrender.com/api/accidents /*VER SI HAT DATOS*/
+curl -X POST https://proteccion-v6o1.onrender.com/api/accidents/restore /BORRAR DATOS/
+

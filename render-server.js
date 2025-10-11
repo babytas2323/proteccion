@@ -12,6 +12,7 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+
 // Enable CORS for all origins
 app.use(cors({
   origin: function (origin, callback) {

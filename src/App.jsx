@@ -5,7 +5,12 @@ import { faInfoCircle, faPlus, faTimes, faDownload, faUpload, faImage, faLocatio
 import MapComponent from './components/MapComponent';
 import SensorForm from './components/SensorForm';
 import ErrorBoundary from './components/ErrorBoundary';
+import DatabaseTest from './components/DatabaseTest';
 import { formatErrorMessage, logError, showErrorNotification, handleApiError } from './utils/errorHandler';
+
+// Import Firebase
+import { db } from './firebase';
+import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 
 import './App.css';
 
@@ -42,11 +47,9 @@ function App() {
   const [userLocation, setUserLocation] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [backendAvailable, setBackendAvailable] = useState(false);
+  const [backendAvailable, setBackendAvailable] = useState(true); // Firebase is always available
   const [mapView, setMapView] = useState('public'); // 'public' or 'civil-protection'
 
-  // Use the Render backend URL directly in production
-  const [apiBaseUrl] = useState(process.env.NODE_ENV === 'production' ? 'https://proteccion-v6o1.onrender.com' : 'http://localhost:3004');
   const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -94,128 +97,75 @@ function App() {
     ));
   };
 
-  // Check if backend is available
-  const checkBackendAvailability = async () => {
+  // Load accidents data from Firebase
+  const loadAccidentsData = async () => {
     try {
-      console.log('Checking backend availability at:', `${apiBaseUrl}/api/health`);
-      const response = await fetch(`${apiBaseUrl}/api/health`);
-      console.log('Health check response status:', response.status);
-      if (response.ok) {
-        setBackendAvailable(true);
-        return true;
-      }
+      setLoading(true);
+      setError(null);
+      
+      console.log('Loading accidents from Firebase');
+      const q = query(collection(db, "accidents"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      const accidentsData = [];
+      
+      querySnapshot.forEach((doc) => {
+        accidentsData.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      console.log('Accidents data loaded:', accidentsData);
+      setAccidents(accidentsData);
     } catch (error) {
-      console.log('Backend not available:', error);
+      console.error('Error loading accidents data:', error);
+      logError('Loading accidents data', error);
+      setError(formatErrorMessage(error));
+      // Fallback to local data in case of error
+      setAccidents(initialAccidentsData);
+      showErrorNotification('Error al cargar datos. Usando datos locales.', 'warning');
+    } finally {
+      setLoading(false);
     }
-    setBackendAvailable(false);
-    return false;
   };
 
-  // Sync local data with backend when it comes back online
-  const syncLocalDataWithBackend = async () => {
+  // Add accident to Firebase
+  const addAccidentToFirebase = async (accidentData) => {
     try {
-      // Get local data from localStorage
-      const localData = localStorage.getItem('tetela-accidents');
-      if (localData) {
-        const accidentsData = JSON.parse(localData);
-        
-        // If there's local data and backend is now available, sync it
-        if (accidentsData.length > 0) {
-          const isBackendAvailable = await checkBackendAvailability();
-          if (isBackendAvailable) {
-            // Send each local accident to the backend
-            let syncSuccess = true;
-            for (const accident of accidentsData) {
-              // Skip accidents that already have IDs from the backend
-              if (!accident.id || typeof accident.id !== 'number') {
-                try {
-                  const response = await fetch(`${apiBaseUrl}/api/accidents`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(accident),
-                  });
-                  
-                  if (!response.ok) {
-                    syncSuccess = false;
-                    console.error('Failed to sync accident:', accident);
-                  }
-                } catch (error) {
-                  syncSuccess = false;
-                  console.error('Error syncing accident:', error);
-                }
-              }
-            }
-            
-            if (syncSuccess) {
-              // Clear local storage after successful sync
-              localStorage.removeItem('tetela-accidents');
-              showErrorNotification('Datos locales sincronizados con el servidor exitosamente!', 'info');
-              
-              // Reload data from backend
-              const response = await fetch(`${apiBaseUrl}/api/accidents`);
-              if (response.ok) {
-                const data = await response.json();
-                setAccidents(data);
-              }
-            } else {
-              showErrorNotification('Algunos datos locales no se pudieron sincronizar. Intente más tarde.', 'warning');
-            }
-          }
-        }
-      }
+      console.log('Adding accident to Firebase:', accidentData);
+      
+      // Add timestamp
+      const accidentWithTimestamp = {
+        ...accidentData,
+        createdAt: new Date()
+      };
+      
+      const docRef = await addDoc(collection(db, "accidents"), accidentWithTimestamp);
+      
+      // Add to local state
+      const accidentToAdd = {
+        id: docRef.id,
+        ...accidentWithTimestamp
+      };
+      
+      const updatedAccidents = [...accidents, accidentToAdd];
+      setAccidents(updatedAccidents);
+      
+      setShowForm(false);
+      showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
+      return true;
     } catch (error) {
-      logError('Syncing local data with backend', error);
-      showErrorNotification('Error al sincronizar datos locales con el servidor.', 'error');
+      console.error('Error adding accident:', error);
+      logError('Adding accident', error);
+      showErrorNotification('Error al agregar el incidente.', 'error');
+      return false;
     }
   };
 
   // Load accidents data when component mounts
   useEffect(() => {
-    const loadAccidentsData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Check if backend is available
-        const isBackendAvailable = await checkBackendAvailability();
-        
-        if (isBackendAvailable) {
-          // Load from backend
-          console.log('Loading accidents from backend at:', `${apiBaseUrl}/api/accidents`);
-          const response = await fetch(`${apiBaseUrl}/api/accidents`);
-          console.log('Accidents API response status:', response.status);
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Accidents data loaded:', data);
-            setAccidents(data);
-            
-            // Try to sync any local data that might exist
-            await syncLocalDataWithBackend();
-          } else {
-            throw new Error(`Error al cargar datos: ${response.status} ${response.statusText}`);
-          }
-        } else {
-          // Fallback to local data
-          console.log('Using local fallback data');
-          setAccidents(initialAccidentsData);
-          showErrorNotification('Trabajando en modo sin conexión. Los datos se guardarán localmente.', 'info');
-        }
-      } catch (error) {
-        console.error('Error loading accidents data:', error);
-        logError('Loading accidents data', error);
-        setError(formatErrorMessage(error));
-        // Fallback to local data in case of error
-        setAccidents(initialAccidentsData);
-        showErrorNotification('Error al cargar datos. Usando datos locales.', 'warning');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadAccidentsData();
-  }, [apiBaseUrl]);
+  }, []);
 
   const handleAddAccident = async (newAccident, imageFile) => {
     try {
@@ -223,55 +173,8 @@ function App() {
       
       // Function to save accident with image data
       const saveAccident = async (accidentData) => {
-        // Check if backend is available
-        const isBackendAvailable = await checkBackendAvailability();
-        
-        if (isBackendAvailable) {
-          // Save to backend
-          const response = await fetch(`${apiBaseUrl}/api/accidents`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(accidentData),
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            // Add to local state - use the original accident data with any returned data
-            const accidentToAdd = result.data ? { ...accidentData, ...result.data } : accidentData;
-            const updatedAccidents = [...accidents, accidentToAdd];
-            setAccidents(updatedAccidents);
-            setShowForm(false);
-            showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
-            return true;
-          } else {
-            const errorMessage = await handleApiError(response);
-            // Instead of showing error, just log it since user wants to ignore it
-            console.log('Error adding accident (ignored):', errorMessage);
-            // Still close the form and return success to avoid blocking the UI
-            setShowForm(false);
-            return true;
-          }
-        } else {
-          // For offline scenarios, always save locally first
-          const updatedAccidents = [...accidents, {...accidentData, id: Date.now()}];
-          setAccidents(updatedAccidents);
-          
-          // Try to save to localStorage
-          try {
-            localStorage.setItem('tetela-accidents', JSON.stringify(updatedAccidents));
-            console.log('Accidents saved to localStorage');
-          } catch (error) {
-            logError('Saving to localStorage', error);
-            // Instead of showing error, just log it since user wants to ignore it
-            console.log('Error saving to localStorage (ignored):', formatErrorMessage(error));
-          }
-          
-          setShowForm(false);
-          showErrorNotification('Reporte de incidente agregado localmente. Para guardar permanentemente inicie el servidor backend.', 'warning');
-          return true;
-        }
+        // Save to Firebase
+        return await addAccidentToFirebase(accidentData);
       };
       
       // If there's an image, convert it to base64 and add it to the accident data
@@ -333,29 +236,19 @@ function App() {
   const handleRestoreInitialData = async () => {
     if (window.confirm('¿Está seguro de que desea restaurar los datos iniciales? Esto eliminará todos los incidentes agregados.')) {
       try {
-        // Check if backend is available
-        const isBackendAvailable = await checkBackendAvailability();
+        // Delete all documents in the collection
+        const querySnapshot = await getDocs(collection(db, "accidents"));
+        const deletePromises = [];
         
-        if (isBackendAvailable) {
-          const response = await fetch(`${apiBaseUrl}/api/accidents/restore`, {
-            method: 'POST',
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            setAccidents(result.data);
-            showErrorNotification('Datos iniciales restaurados exitosamente.', 'info');
-            return;
-          } else {
-            const errorMessage = await handleApiError(response);
-            showErrorNotification(errorMessage);
-            return;
-          }
-        }
+        querySnapshot.forEach((doc) => {
+          deletePromises.push(deleteDoc(doc.ref));
+        });
         
-        // Fallback to local data
-        setAccidents(initialAccidentsData);
-        showErrorNotification('Datos iniciales restaurados exitosamente (datos locales).', 'info');
+        await Promise.all(deletePromises);
+        
+        // Reload data
+        await loadAccidentsData();
+        showErrorNotification('Datos iniciales restaurados exitosamente.', 'info');
       } catch (error) {
         logError('Restoring initial data', error);
         showErrorNotification('Error al restaurar los datos iniciales.');
@@ -428,11 +321,14 @@ function App() {
       if (!file) return;
       
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const data = JSON.parse(e.target.result);
           if (Array.isArray(data)) {
-            setAccidents(data);
+            // Add each accident to Firebase
+            for (const accident of data) {
+              await addAccidentToFirebase(accident);
+            }
             showErrorNotification('Datos importados exitosamente!', 'info');
           } else {
             showErrorNotification('Formato de archivo inválido. Debe ser un arreglo JSON.');
@@ -477,6 +373,9 @@ function App() {
           </header>
           
           <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+            {/* Database Test Component */}
+            <DatabaseTest />
+            
             {loading && (
               <div style={{
                 position: 'fixed',
@@ -808,14 +707,8 @@ function App() {
                             fontSize: '12px',
                             color: '#6c757d'
                           }}>
-                            <p><strong>Entorno:</strong> {backendAvailable ? 'Con backend disponible' : 'Sin backend (solo lectura)'}</p>
-                            <p><strong>API URL:</strong> {apiBaseUrl}</p>
-                            {!backendAvailable && (
-                              <p>
-                                <strong>Nota:</strong> Los datos se guardan localmente en su navegador. 
-                                Para guardar permanentemente en el archivo accidents.json, inicie el servidor backend: <code>npm run backend</code>.
-                              </p>
-                            )}
+                            <p><strong>Entorno:</strong> Firebase Firestore</p>
+                            <p><strong>Estado:</strong> Conectado</p>
                             
                           </div>
                         </div>
@@ -1077,14 +970,8 @@ function App() {
                             fontSize: '12px',
                             color: '#6c757d'
                           }}>
-                            <p><strong>Entorno:</strong> {backendAvailable ? 'Con backend disponible' : 'Sin backend (solo lectura)'}</p>
-                            <p><strong>API URL:</strong> {apiBaseUrl}</p>
-                            {!backendAvailable && (
-                              <p>
-                                <strong>Nota:</strong> Los datos se guardan localmente en su navegador. 
-                                Para guardar permanentemente en el archivo accidents.json, inicie el servidor backend: <code>npm run backend</code>.
-                              </p>
-                            )}
+                            <p><strong>Entorno:</strong> Firebase Firestore</p>
+                            <p><strong>Estado:</strong> Conectado</p>
                             
                           </div>
                         </div>
@@ -1107,12 +994,6 @@ function App() {
                     </div>
                   )}
                 </>
-              } />
-              
-              <Route path="/add-accident" element={
-                <div className="full-page-form">
-                  <SensorForm onAddSensor={handleAddAccident} />
-                </div>
               } />
             </Routes>
           </main>
