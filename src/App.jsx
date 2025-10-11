@@ -697,14 +697,14 @@ function App() {
                                 style={{ display: 'none' }}
                               />
                             </label>
-                            
+                            {/*
                             <button 
                               onClick={handleRestoreInitialData} 
                               className="restore-button"
                               style={{ backgroundColor: '#dc3545' }}
                             >
                               Restaurar Datos Iniciales
-                            </button>
+                            </button>*/}
                           </div>
                           
                           {/* Environment Info */}

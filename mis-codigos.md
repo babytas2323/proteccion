@@ -97,3 +97,8 @@ El frontend guarda los datos del incidente en Firebase, incluyendo la URL de la 
 Cuando se cargan los incidentes:
 El frontend lee los datos de Firebase
 Las imágenes se muestran usando las URLs almacenadas
+
+
+
+Guarde los datos del incidente en Firebase (como querías originalmente)
+Almacene las imágenes en Cloudinary y solo guarde la URL en Firebase
