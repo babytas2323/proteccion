@@ -39,3 +39,20 @@ git push
 curl -s https://proteccion-v6o1.onrender.com/api/accidents /*VER SI HAT DATOS*/
 curl -X POST https://proteccion-v6o1.onrender.com/api/accidents/restore /BORRAR DATOS/
 
+
+
+Qué es Firebase Authentication
+
+Firebase Authentication es el servicio de autenticación de usuarios de Google.
+Permite que las personas inicien sesión en tu app usando:
+
+📧 Email y contraseña
+🔐 Google, Facebook, Apple, Twitter, GitHub
+📱 Teléfono (SMS)
+🪪 Anónimo (modo temporal sin cuenta)
+
+
+
+Ya que estás usando Firebase Firestore, agregar autenticación sería sencillo y se integraría bien con tu configuración actual. Para la mayoría de los proyectos pequeños o medianos, el plan gratuito suele ser suficiente.
+
+¿Te gustaría que te ayude a configurar el inicio de sesión con Google o correo electrónico? También puedo ayudarte a crear una interfaz de login básica.
