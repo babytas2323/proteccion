@@ -4,7 +4,38 @@
     "nombre": "Test Incident",
     "tipo": "Test",
     "descripcion": "This is a test incident for fallback data",
-    "coordenadas": [0, 0],
+    "coordenadas": [
+      0,
+      0
+    ],
     "nivel_riesgo": "low"
+  },
+  {
+    "nombre": "Nuevo Incidente",
+    "tipo": "Prueba",
+    "descripcion": "Descripción de prueba",
+    "id": 1760180738727,
+    "createdAt": "2025-10-11T11:05:38.727Z"
+  },
+  {
+    "nombre": "Incidente con Imagen",
+    "tipo": "Prueba de Imagen",
+    "descripcion": "Este es un incidente de prueba con imagen adjunta",
+    "id": 1760180762238,
+    "createdAt": "2025-10-11T11:06:02.238Z"
+  },
+  {
+    "nombre": "Incidente con Imagen Real",
+    "tipo": "Prueba de Imagen Real",
+    "descripcion": "Este es un incidente de prueba con imagen adjunta real",
+    "coordenadas": [
+      0,
+      0
+    ],
+    "nivel_riesgo": "low",
+    "imageUrl": "https://res.cloudinary.com/dvyuii8ot/image/upload/v1760181031/accident_reports/oksn07pb5kqrwnarlvwu.gif",
+    "imagePublicId": "accident_reports/oksn07pb5kqrwnarlvwu",
+    "id": 1760181031496,
+    "createdAt": "2025-10-11T11:10:31.496Z"
   }
 ]

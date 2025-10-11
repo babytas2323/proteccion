@@ -8,6 +8,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 import { formatErrorMessage, logError, showErrorNotification, handleApiError } from './utils/errorHandler';
 
+
+
 // Import Firebase
 import { db } from './firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
@@ -47,7 +49,6 @@ function App() {
   const [userLocation, setUserLocation] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [backendAvailable, setBackendAvailable] = useState(true); // Firebase is always available
   const [mapView, setMapView] = useState('public'); // 'public' or 'civil-protection'
 
   const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
@@ -177,40 +178,43 @@ function App() {
     try {
       console.log('Attempting to save accident:', newAccident);
       
-      // Function to save accident with image data
-      const saveAccident = async (accidentData) => {
-        // Save to Firebase
-        return await addAccidentToFirebase(accidentData);
-      };
-      
-      // If there's an image, convert it to base64 and add it to the accident data
+      // If there's an image, upload it to Cloudinary first
       if (imageFile) {
-        // Convert image to base64
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const base64Image = e.target.result;
+        try {
+          // Create FormData for Cloudinary upload
+          const formData = new FormData();
+          formData.append('image', imageFile);
           
-          // Add base64 image to accident data
-          const accidentWithImage = {
-            ...newAccident,
-            image: base64Image
-          };
+          // Upload image to Cloudinary via backend
+          const response = await fetch('http://localhost:3004/api/upload', {
+            method: 'POST',
+            body: formData
+          });
           
-          // Save the accident with image data
-          await saveAccident(accidentWithImage);
-        };
-        reader.readAsDataURL(imageFile);
-        return true; // Return early as we're handling the async operation
-      } else {
-        // Save without image
-        return await saveAccident(newAccident);
+          if (!response.ok) {
+            throw new Error(`Failed to upload image: ${response.statusText}`);
+          }
+          
+          const result = await response.json();
+          console.log('Image uploaded to Cloudinary:', result);
+          
+          // Add image URL to accident data
+          newAccident.imageUrl = result.url;
+          newAccident.imagePublicId = result.public_id;
+        } catch (uploadError) {
+          console.error('Error uploading image to Cloudinary:', uploadError);
+          showErrorNotification('Error al cargar la imagen. El incidente se guardará sin imagen.', 'warning');
+        }
       }
+      
+      // Save accident data to Firebase
+      return await addAccidentToFirebase(newAccident);
     } catch (error) {
       logError('Adding accident', error);
-      // Instead of showing error, just log it since user wants to ignore it
-      console.log('Error adding accident (ignored):', formatErrorMessage(error));
+      console.log('Error adding accident:', formatErrorMessage(error));
       setShowForm(false);
-      return true; // Return true to avoid blocking the UI
+      showErrorNotification('Error al agregar el incidente.', 'error');
+      return false;
     }
   };
 
