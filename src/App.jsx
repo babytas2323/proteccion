@@ -489,6 +489,7 @@ function App() {
             <button 
               onClick={() => setShowDebug(!showDebug)}
               style={{
+               display: 'none', // 👈 esto lo oculta totalmente el boton 
                 position: 'absolute',
                 right: '10px',
                 top: '10px',

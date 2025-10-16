@@ -3,7 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-le
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarkerAlt, faCrosshairs, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { faMapMarkerAlt, faCrosshairs, faInfoCircle, faPhone, faMapMarkedAlt, faImage, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import * as turf from '@turf/turf';
 
 // Fix for default marker icons in Leaflet
@@ -52,6 +53,38 @@ const formatDateInSpanish = (dateString) => {
   } catch (error) {
     console.error('Error formatting date in Spanish:', error);
     return 'Fecha no disponible';
+  }
+};
+
+// Function to convert 24-hour time to 12-hour time with AM/PM
+const formatTimeTo12Hour = (timeString) => {
+  try {
+    if (!timeString) return 'No especificada';
+    
+    // Split the time string (assuming format is HH:MM)
+    const parts = timeString.split(':');
+    if (parts.length >= 2) {
+      let hours = parseInt(parts[0], 10);
+      const minutes = parts[1];
+      
+      // Validate hours and minutes
+      if (hours >= 0 && hours <= 23 && minutes && minutes.length === 2) {
+        // Determine AM/PM
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        // Convert to 12-hour format
+        hours = hours % 12;
+        if (hours === 0) hours = 12; // 0 should be 12
+        
+        return `${hours}:${minutes} ${ampm}`;
+      }
+    }
+    
+    // If parsing fails, return the original string
+    return timeString || 'No especificada';
+  } catch (error) {
+    console.error('Error formatting time to 12-hour format:', error);
+    return timeString || 'No especificada';
   }
 };
 
@@ -189,6 +222,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
           minWidth: '250px', 
           maxWidth: '300px',
           padding: '15px',
+          textAlign: 'center',
           borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           fontFamily: 'Arial, sans-serif'
@@ -244,6 +278,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
           maxWidth: '350px',
           padding: '15px',
           borderRadius: '8px',
+          textAlign: 'center',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           fontFamily: 'Arial, sans-serif',
           backgroundColor: '#fff'
@@ -299,7 +334,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
           <div style={{ marginBottom: '8px' }}>
             <p style={{ margin: '5px 0', fontSize: '14px', display: 'flex', justifyContent: 'space-between' }}>
               <strong>Hora:</strong> 
-              <span>{incident.hora || incident.Hora || 'No especificada'}</span>
+              <span>{formatTimeTo12Hour(incident.hora || incident.Hora)}</span>
             </p>
           </div>
           
@@ -344,20 +379,67 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
           
           {/* Imagen del incidente */}
           {incident.imageUrl && (
-            <div style={{ marginBottom: '8px' }}>
-              <p style={{ margin: '5px 0', fontSize: '14px' }}>
-                <strong>Imagen del incidente:</strong>
+            <div style={{ marginBottom: '8px', textAlign: 'center' }}>
+              <button
+                onClick={() => {
+                  // Toggle image visibility
+                  const imgElement = document.getElementById(`incident-image-${incident.id || Math.random()}`);
+                  if (imgElement) {
+                    if (imgElement.style.display === 'none') {
+                      imgElement.style.display = 'block';
+                    } else {
+                      imgElement.style.display = 'none';
+                    }
+                  }
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textDecoration: 'none',
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  margin: '0 5px'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#5a6268';
+                  e.target.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#6c757d';
+                  e.target.style.transform = 'scale(1)';
+                }}
+              >
+                <FontAwesomeIcon icon={faImage} />
+              </button>
+              <p style={{ margin: '5px 0', fontSize: '14px', display: 'inline-block' }}>
+                <strong>Imagen del incidente</strong>
               </p>
-              <img 
-                src={incident.imageUrl} 
-                alt="Imagen del incidente" 
-                style={{ 
-                  maxWidth: '100%', 
-                  maxHeight: '200px', 
-                  borderRadius: '4px',
-                  border: '1px solid #ddd'
-                }} 
-              />
+              <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                <img 
+                  id={`incident-image-${incident.id || Math.random()}`}
+                  src={incident.imageUrl} 
+                  alt="Imagen del incidente" 
+                  style={{ 
+                    display: 'none', // Ocultar inicialmente
+                    maxWidth: '100%', 
+                    maxHeight: '200px', 
+                    borderRadius: '4px',
+                    border: '1px solid #ddd',
+                    marginTop: '10px',
+                    margin: '10px auto 0'
+                  }} 
+                />
+              </div>
             </div>
           )}
           
@@ -368,9 +450,117 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
             borderTop: '1px solid #eee',
             fontSize: '11px',
             color: '#888',
-            textAlign: 'right'
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}>
-            <p style={{ margin: '0' }}>Reportado: {new Date().toLocaleString('es-MX')}</p>
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {/* Call button */}
+              {incident.telefono && incident.telefono !== 'No especificado' && (
+                <a 
+                  href={`tel:${incident.telefono}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textDecoration: 'none',
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '50%',
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#0056b3';
+                    e.target.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#007bff';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                >
+                  <FontAwesomeIcon icon={faPhone} />
+                </a>
+              )}
+              
+              {/* WhatsApp button */}
+              {incident.telefono && incident.telefono !== 'No especificado' && (
+                <a 
+                  href={`https://wa.me/${incident.telefono.replace(/\D/g, '')}?text=Estamos%20revisando%20su%20reporte.%20En%20un%20momento%20lo%20atendemos.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textDecoration: 'none',
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '50%',
+                    backgroundColor: '#25D366',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#128C7E';
+                    e.target.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#25D366';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                >
+                  <FontAwesomeIcon icon={faWhatsapp} />
+                </a>
+              )}
+              
+              {/* Google Maps button */}
+              {incident.coordenadas && Array.isArray(incident.coordenadas) && incident.coordenadas.length >= 2 && (
+                <a 
+                  href={`https://www.google.com/maps?q=${incident.coordenadas[1]},${incident.coordenadas[0]}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textDecoration: 'none',
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '50%',
+                    backgroundColor: '#4285F4',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#3367D6';
+                    e.target.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#4285F4';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                >
+                  <FontAwesomeIcon icon={faMapMarkedAlt} />
+                </a>
+              )}
+            </div>
+            
+            {/* Report timestamp */}
+            <p style={{ margin: '0', textAlign: 'right' }}>
+              Reporte: {new Date().toLocaleString('es-MX')}
+            </p>
           </div>
         </div>
       );
@@ -493,8 +683,8 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
       {/* View Indicator */}
       <div style={{
         position: 'absolute',
-        top: '10px',
-        left: '10px',
+        top: '20px',
+        left: '50px',
         backgroundColor: mapView === 'public' ? '#28a745' : '#007bff',
         color: 'white',
         padding: '5px 10px',
