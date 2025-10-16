@@ -422,6 +422,7 @@
   animation: pulse-blue 2s infinite;
   display: flex;
   align-items: center;
+  border: 2px solid white;
   justify-content: center;
   position: relative;
 }

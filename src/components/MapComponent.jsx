@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-le
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarkerAlt, faCrosshairs, faInfoCircle, faPhone, faMapMarkedAlt, faImage, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faMapMarkerAlt, faCrosshairs, faLocationArrow,faInfoCircle, faPhone, faMapMarkedAlt, faImage, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import * as turf from '@turf/turf';
 
@@ -105,43 +105,43 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
     
     if (lowerTipo.includes('huracán') || lowerTipo.includes('hurricane')) {
       iconType = 'fas fa-hurricane';
-      iconColor = '#007bff'; // Blue
+      iconColor = 'white'; // Blue
     } else if (lowerTipo.includes('inundacion') || lowerTipo.includes('inundación') || lowerTipo.includes('flood') || lowerTipo.includes('rios desbordados') || lowerTipo.includes('ríos desbordados') || lowerTipo.includes('corrientes fuertes')) {
       iconType = 'fas fa-water';
-      iconColor = '#17a2b8'; // Cyan
+     iconColor = 'white'; // Cyan
     } else if (lowerTipo.includes('derrumbe') || lowerTipo.includes('deslizamiento') || lowerTipo.includes('landslide') || lowerTipo.includes('tierra o laderas') || lowerTipo.includes('puente') || lowerTipo.includes('caminos')) {
       iconType = 'fas fa-mountain';
-      iconColor = '#6c757d'; // Gray
+      iconColor = 'white';// Gray
     } else if (lowerTipo.includes('viento') || lowerTipo.includes('wind') || lowerTipo.includes('fuerte')) {
       iconType = 'fas fa-wind';
-      iconColor = '#6f42c1'; // Purple
+    iconColor = 'white'; // Purple
     } else if (lowerTipo.includes('fuego') || lowerTipo.includes('fire') || lowerTipo.includes('incendio') || lowerTipo.includes('cortocircuito') || lowerTipo.includes('gas')) {
       iconType = 'fas fa-fire';
-      iconColor = '#fd7e14'; // Orange
+     iconColor = 'white'; // Orange
     } else if (lowerTipo.includes('terremoto') || lowerTipo.includes('earthquake')) {
       iconType = 'fas fa-home';
-      iconColor = '#28a745'; // Green
+      iconColor = 'white'; // Green
     } else if (lowerTipo.includes('lluvia') || lowerTipo.includes('rain')) {
       iconType = 'fas fa-cloud-rain';
-      iconColor = '#17a2b8'; // Cyan
+     iconColor = 'white'; // Cyan
     } else if (lowerTipo.includes('rayo') || lowerTipo.includes('lightning')) {
       iconType = 'fas fa-bolt';
-      iconColor = '#ffc107'; // Yellow
+    iconColor = 'white'; // Yellow
     } else if (lowerTipo.includes('arbol') || lowerTipo.includes('árbol') || lowerTipo.includes('tree')) {
       iconType = 'fas fa-tree';
-      iconColor = '#28a745'; // Green
+      iconColor = 'white';; // Green
     } else if (lowerTipo.includes('techo') || lowerTipo.includes('casa') || lowerTipo.includes('roof') || lowerTipo.includes('house')) {
       iconType = 'fas fa-house-damage';
-      iconColor = '#dc3545'; // Red
+   iconColor = 'white';// Red
     } else if (lowerTipo.includes('poste') || lowerTipo.includes('postes') || lowerTipo.includes('cables') || lowerTipo.includes('electric')) {
       iconType = 'fas fa-bolt';
-      iconColor = '#ffc107'; // Yellow
+      iconColor = 'white';// Yellow
     } else if (lowerTipo.includes('vehiculo') || lowerTipo.includes('vehículo') || lowerTipo.includes('vehicle') || lowerTipo.includes('car')) {
       iconType = 'fas fa-car';
-      iconColor = '#6c757d'; // Gray
+      iconColor = 'white'; // Gray
     } else if (lowerTipo.includes('objeto') || lowerTipo.includes('objetos') || lowerTipo.includes('volador') || lowerTipo.includes('voladores') || lowerTipo.includes('object') || lowerTipo.includes('flying')) {
       iconType = 'fas fa-wind';
-      iconColor = '#6f42c1'; // Purple
+      iconColor = 'white'; // Purple
     }
 
     // Determine risk level for radar animation
@@ -159,7 +159,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
     // Create custom icon using FontAwesome with radar animation
     const icon = L.divIcon({
       className: 'custom-icon',
-      html: `<div class="${radarClass}" style="display: flex; align-items: center; justify-content: center;">
+      html: `<div class="${radarClass}" style="display: flex; align-items: center; justify-content: center; ">
                <i class="${iconType}" style="color: ${iconColor}; font-size: 14px;"></i>
              </div>`,
       iconSize: [30, 30],
@@ -612,11 +612,12 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
             icon={L.divIcon({
               className: 'custom-icon',
               html: `<div class="radar-icon default" style="display: flex; align-items: center; justify-content: center;">
-                       <i class="fas fa-crosshairs" style="color: #007bff; font-size: 14px;"></i>
+                       <i class="fa-solid fa-location-arrow" style="color:rgb(255, 255, 255); font-size: 14px;"></i>
                      </div>`,
               iconSize: [24, 24],
               iconAnchor: [12, 12],
-            })}
+
+             })}
           >
             <Popup>
               <div style={{ 

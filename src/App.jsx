@@ -685,7 +685,7 @@ function App() {
                         backgroundColor: '#4285f4',
                         color: 'white',
                         borderRadius: '50% 0 0 50%',
-                        width: '50px',
+                        width: '40px',
                         height: '50px',
                         border: '2px solid #ffffff',
                         fontSize: '1.5em',
@@ -976,12 +976,12 @@ function App() {
                       onClick={() => setMostrarClima(!mostrarClima)}
                       style={{
                         position: 'absolute',
-                        top: '170px',
+                        top: '180px',
                         right: 0,
                         backgroundColor: '#4285f4',
                         color: 'white',
                         borderRadius: '50% 0 0 50%',
-                        width: '50px',
+                        width: '40px',
                         height: '50px',
                         border: '2px solid #ffffff',
                         fontSize: '1.5em',
