@@ -6,26 +6,19 @@ Sistema de monitoreo y reporte de riesgos naturales para Tetela de Ocampo, Puebl
 
 ### Frontend
 - **React** - Biblioteca de JavaScript para construir interfaces de usuario. En este proyecto, React se utiliza para crear todos los componentes de la interfaz, gestionar el estado de la aplicación y permitir la interacción con el usuario.
-
 - **React DOM** - Punto de entrada del DOM específico para React. Se encarga de renderizar los componentes de React en el navegador web y manejar las actualizaciones del DOM cuando cambia el estado.
-
 - **Vite** - Herramienta de compilación que proporciona un entorno de desarrollo más rápido. Vite mejora la experiencia de desarrollo con un servidor de desarrollo rápido y reconstrucciones instantáneas gracias a su enfoque de módulos ES.
-
 - **Leaflet** - Biblioteca de mapas interactivos de código abierto. Leaflet permite mostrar el mapa donde se visualizan los incidentes reportados y proporciona funcionalidades de interacción con el mapa como zoom y pan.
-
 - **React Leaflet** - Componentes de React para Leaflet. Facilita la integración de Leaflet en una aplicación React, permitiendo crear componentes reutilizables para marcadores, polígonos y otras capas del mapa.
-
 - **Font Awesome** - Conjunto de iconos vectoriales. Se utiliza para mostrar iconos visuales en la interfaz de usuario, como los botones flotantes y símbolos en los marcadores del mapa.
-
 - **Turf.js** - Biblioteca de análisis espacial avanzado. Turf.js ayuda a realizar cálculos geoespaciales como distancias entre puntos, buffers y otras operaciones con datos geográficos.
+- **Leaflet Draw** - Extensión de Leaflet para permitir la creación de polígonos y marcadores en el mapa. Permite a los usuarios dibujar y editar polígonos y marcadores en el mapa.
+ 
 
 ### Backend
 - **Node.js** - Entorno de ejecución de JavaScript. Permite ejecutar código JavaScript en el servidor, facilitando la creación del backend API para manejar los reportes de incidentes.
-
 - **Express** - Framework web para Node.js. Express proporciona una estructura para definir rutas, middleware y manejadores de solicitudes HTTP en el backend del sistema.
-
 - **Cors** - Middleware para habilitar CORS en Express. Permite que el frontend (que corre en un puerto diferente) pueda comunicarse con el backend, evitando restricciones de seguridad del navegador.
-
 - **Multer** - Middleware para manejar multipart/form-data. Es fundamental para procesar las imágenes adjuntas en los reportes de incidentes, permitiendo su carga al servidor.
 
 - **Dotenv** - Módulo que carga variables de entorno desde un archivo .env. Se utiliza para almacenar de forma segura credenciales y configuraciones sensibles como claves de API.
@@ -64,7 +57,7 @@ Tetela Radar es una aplicación web que permite:
 ## Características
 
 ### Frontend (React + Leaflet)
-- Interfaz de usuario moderna y responsive
+- Interfaz de usuario moderna y responsiveas      
 - Mapa interactivo con marcadores de incidentes
 - Formulario para reportar nuevos incidentes
 - Sistema de leyenda con niveles de riesgo

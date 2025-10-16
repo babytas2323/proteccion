@@ -25,14 +25,14 @@ Vercel es una plataforma sin servidor que no conserva los cambios del sistema de
 /*FIN IMAGENES*/
 
 
-/*CODIGO PARA SUBIR NUEVOS CAMBIOS A GITHUB Y VERSEL*/
+## CODIGO PARA SUBIR NUEVOS CAMBIOS A GITHUB Y VERSEL
 
 git status  
 git add .  
 git commit -m "Actualizo mapa protector con cambios recientes"  
 git push   
 
-/*FIN CODIGO PARA SUBIR NUEVOS CAMBIOS A GITHUB Y VERSEL*/
+## FIN CODIGO PARA SUBIR NUEVOS CAMBIOS A GITHUB Y VERSEL
 
 
 /*CODIGO PARA SUBIR NUEVOS CAMBIOS A GITHUB Y VERSEL*/

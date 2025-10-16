@@ -10,19 +10,19 @@ import { formatErrorMessage, logError, showErrorNotification, handleApiError } f
 
 
 
-// Import Firebase
+// Importar Firebase
 import { db } from './firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 
 import './App.css';
 
-// Import xlsx library for Excel export
+// Importar librería xlsx para exportar a Excel
 import * as XLSX from 'xlsx';
 
-// Import initial data as fallback
+// Importar datos iniciales como respaldo
 import initialAccidentsData from './data/accidents.json';
 
-// Component to track route changes and update mapView state
+// Componente para rastrear cambios de ruta y actualizar el estado mapView
 const RouteTracker = ({ setMapView }) => {
   const location = useLocation();
   
@@ -37,7 +37,7 @@ const RouteTracker = ({ setMapView }) => {
   return null;
 };
 
-// Component for view toggle buttons
+// Componente para botones de cambio de vista
 const ViewToggleButtons = ({ currentView }) => {
   const navigate = useNavigate();
   
@@ -49,14 +49,14 @@ function App() {
   const [userLocation, setUserLocation] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [mapView, setMapView] = useState('public'); // 'public' or 'civil-protection'
+  const [mapView, setMapView] = useState('public'); // 'public' o 'civil-protection'
 
-  const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
+  const [mostrarClima, setMostrarClima] = useState(false); // Estado para el widget del clima
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showDebug, setShowDebug] = useState(false); // For debugging image uploads
+  const [showDebug, setShowDebug] = useState(false); // Para depurar cargas de imágenes
 
-  // Function to get risk level from accident data
+  // Función para obtener el nivel de riesgo de los datos del accidente
   const getRiskLevel = (accident) => {
     const riskLevel = accident.nivel_riesgo || accident.riskLevel;
     if (!riskLevel) return 'low';
@@ -72,7 +72,7 @@ function App() {
     return 'low';
   };
 
-  // Function to count accidents by risk level
+  // Función para contar accidentes por nivel de riesgo
   const countAccidentsByRiskLevel = () => {
     const counts = { low: 0, medium: 0, high: 0 };
     
@@ -84,7 +84,7 @@ function App() {
     return counts;
   };
 
-  // Function to count accidents by type
+  // Función para contar accidentes por tipo
   const getIncidentTypeCounts = () => {
     const typeCounts = {};
     
@@ -93,19 +93,19 @@ function App() {
       typeCounts[type] = (typeCounts[type] || 0) + 1;
     });
     
-    // Convert to array of elements to display
+    // Convertir a array de elementos para mostrar
     return Object.entries(typeCounts).map(([type, count]) => (
       <p key={type}><strong>{type}:</strong> {count} incidentes</p>
     ));
   };
 
-  // Load accidents data from Firebase
+  // Cargar datos de accidentes desde Firebase
   const loadAccidentsData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Loading accidents from Firebase');
+      console.log('Cargando accidentes desde Firebase');
       const q = query(collection(db, "accidents"), orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
       const accidentsData = [];
@@ -117,16 +117,16 @@ function App() {
         });
       });
       
-      console.log('Accidents data loaded:', accidentsData);
+      console.log('Datos de accidentes cargados:', accidentsData);
       setAccidents(accidentsData);
     } catch (error) {
-      console.error('Error loading accidents data:', error);
-      logError('Loading accidents data', error);
-      // Provide more detailed error information
+      console.error('Error al cargar datos de accidentes:', error);
+      logError('Cargando datos de accidentes', error);
+      // Proporcionar información de error más detallada
       const errorMessage = error.message || 'Error al cargar datos.';
-      const errorCode = error.code ? ` (Code: ${error.code})` : '';
+      const errorCode = error.code ? ` (Código: ${error.code})` : '';
       setError(`${errorMessage}${errorCode}`);
-      // Fallback to local data in case of error
+      // Usar datos locales en caso de error
       setAccidents(initialAccidentsData);
       showErrorNotification(`Error al cargar datos. Usando datos locales. ${errorMessage}${errorCode}`, 'warning');
     } finally {
@@ -134,12 +134,12 @@ function App() {
     }
   };
 
-  // Add accident to Firebase
+  // Agregar accidente a Firebase
   const addAccidentToFirebase = async (accidentData) => {
     try {
-      console.log('Adding accident to Firebase:', accidentData);
+      console.log('Agregando accidente a Firebase:', accidentData);
       
-      // Add timestamp
+      // Agregar marca de tiempo
       const accidentWithTimestamp = {
         ...accidentData,
         createdAt: new Date()
@@ -147,7 +147,7 @@ function App() {
       
       const docRef = await addDoc(collection(db, "accidents"), accidentWithTimestamp);
       
-      // Add to local state
+      // Agregar al estado local
       const accidentToAdd = {
         id: docRef.id,
         ...accidentWithTimestamp
@@ -160,52 +160,52 @@ function App() {
       showErrorNotification('Reporte de incidente agregado exitosamente!', 'info');
       return true;
     } catch (error) {
-      console.error('Error adding accident:', error);
-      logError('Adding accident', error);
-      // Provide more detailed error information
+      console.error('Error al agregar accidente:', error);
+      logError('Agregando accidente', error);
+      // Proporcionar información de error más detallada
       const errorMessage = error.message || 'Error al agregar el incidente.';
-      const errorCode = error.code ? ` (Code: ${error.code})` : '';
+      const errorCode = error.code ? ` (Código: ${error.code})` : '';
       showErrorNotification(`${errorMessage}${errorCode}`, 'error');
       return false;
     }
   };
 
-  // Load accidents data when component mounts
+  // Cargar datos de accidentes cuando el componente se monta
   useEffect(() => {
     loadAccidentsData();
   }, []);
 
   const handleAddAccident = async (newAccident, imageFile) => {
     try {
-      console.log('Attempting to save accident:', newAccident);
-      console.log('Image file received:', imageFile);
+      console.log('Intentando guardar accidente:', newAccident);
+      console.log('Archivo de imagen recibido:', imageFile);
       
-      // If there's an image, upload it to Cloudinary directly
+      // Si hay una imagen, cargarla a Cloudinary directamente
       if (imageFile) {
         try {
-          console.log('Starting image upload to Cloudinary...');
+          console.log('Iniciando carga de imagen a Cloudinary...');
           
-          // Log image file details
-          console.log('Image details:', {
+          // Registrar detalles del archivo de imagen
+          console.log('Detalles de la imagen:', {
             name: imageFile.name,
             size: imageFile.size,
             type: imageFile.type
           });
           
-          // Create FormData for Cloudinary upload
+          // Crear FormData para la carga a Cloudinary
           const formData = new FormData();
           formData.append('file', imageFile);
           formData.append('upload_preset', 'accident_reports_preset');
           formData.append('folder', 'accident_reports');
           
-          console.log('Cloudinary upload data:', {
+          console.log('Datos de carga a Cloudinary:', {
             cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
             fileName: imageFile.name,
             fileSize: imageFile.size,
             fileType: imageFile.type
           });
           
-          // Upload image directly to Cloudinary using unsigned upload with preset
+          // Cargar imagen directamente a Cloudinary usando carga sin firma con preset
           const response = await fetch(
             `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
             {
@@ -214,53 +214,53 @@ function App() {
             }
           );
           
-          console.log('Cloudinary response status:', response.status);
-          console.log('Cloudinary response headers:', [...response.headers.entries()]);
+          console.log('Estado de respuesta de Cloudinary:', response.status);
+          console.log('Encabezados de respuesta de Cloudinary:', [...response.headers.entries()]);
           
           if (!response.ok) {
             const errorText = await response.text();
-            console.error('Cloudinary upload error response:', errorText);
-            throw new Error(`Failed to upload image: ${response.status} ${response.statusText} - ${errorText}`);
+            console.error('Respuesta de error de Cloudinary:', errorText);
+            throw new Error(`Error al cargar imagen: ${response.status} ${response.statusText} - ${errorText}`);
           }
           
           const result = await response.json();
-          console.log('Image uploaded to Cloudinary:', result);
+          console.log('Imagen cargada a Cloudinary:', result);
           
-          // Add image URL to accident data
+          // Agregar URL de imagen a los datos del accidente
           newAccident.imageUrl = result.secure_url;
           newAccident.imagePublicId = result.public_id;
         } catch (uploadError) {
-          console.error('Error uploading image to Cloudinary:', uploadError);
+          console.error('Error al cargar imagen a Cloudinary:', uploadError);
           // Verificar si es un error de conexión
           if (uploadError instanceof TypeError && uploadError.message.includes('fetch')) {
             showErrorNotification('Error de conexión al subir la imagen. Verifique su conexión a internet.', 'error');
           } else {
             showErrorNotification(`Error al cargar la imagen: ${uploadError.message}`, 'error');
           }
-          // Continue without image if upload fails
+          // Continuar sin imagen si la carga falla
         }
       } else {
-        console.log('No image file provided');
+        console.log('No se proporcionó archivo de imagen');
       }
       
-      // Save accident data to Firebase
-      console.log('Saving accident data to Firebase:', newAccident);
+      // Guardar datos del accidente en Firebase
+      console.log('Guardando datos del accidente en Firebase:', newAccident);
       return await addAccidentToFirebase(newAccident);
     } catch (error) {
-      logError('Adding accident', error);
-      console.log('Error adding accident:', formatErrorMessage(error));
+      logError('Agregando accidente', error);
+      console.log('Error al agregar accidente:', formatErrorMessage(error));
       setShowForm(false);
       showErrorNotification('Error al agregar el incidente.', 'error');
       return false;
     }
   };
 
-  // Function to handle when user location is found
+  // Función para manejar cuando se encuentra la ubicación del usuario
   const handleLocationFound = (lat, lng) => {
     setUserLocation({ lat, lng });
   };
 
-  // Function to request user location
+  // Función para solicitar la ubicación del usuario
   const requestUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -270,7 +270,7 @@ function App() {
           showErrorNotification('Ubicación obtenida exitosamente!', 'info');
         },
         (error) => {
-          console.error('Error getting location:', error);
+          console.error('Error al obtener ubicación:', error);
           showErrorNotification('No se pudo obtener la ubicación. Por favor, verifica los permisos.', 'error');
         }
       );
@@ -281,7 +281,7 @@ function App() {
 
 
 
-  // Debug function for image upload in browser
+  // Función de depuración para carga de imágenes en el navegador
   const debugImageUploadInBrowser = async () => {
     const outputDiv = document.getElementById('debug-output');
     if (!outputDiv) return;
@@ -290,17 +290,17 @@ function App() {
     
     try {
       outputDiv.innerHTML += '1. Verificando variables de entorno...\\n';
-      outputDiv.innerHTML += `   Cloud name: ${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}\\n`;
-      outputDiv.innerHTML += `   API key exists: ${!!import.meta.env.VITE_CLOUDINARY_API_KEY}\\n`;
+      outputDiv.innerHTML += `   Nombre de Cloud: ${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}\\n`;
+      outputDiv.innerHTML += `   La clave API existe: ${!!import.meta.env.VITE_CLOUDINARY_API_KEY}\\n`;
       
       if (!import.meta.env.VITE_CLOUDINARY_CLOUD_NAME) {
-        outputDiv.innerHTML += '   ❌ ERROR: VITE_CLOUDINARY_CLOUD_NAME is missing\\n';
+        outputDiv.innerHTML += '   ❌ ERROR: VITE_CLOUDINARY_CLOUD_NAME está faltando\\n';
         return;
       }
       
       outputDiv.innerHTML += '   ✅ Variables de entorno presentes\\n\\n';
       
-      // Create test image (1x1 pixel GIF)
+      // Crear imagen de prueba (GIF de 1x1 píxel)
       outputDiv.innerHTML += '2. Creando imagen de prueba...\\n';
       const testImageData = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
       const binary = atob(testImageData);
@@ -311,7 +311,7 @@ function App() {
       const testImageBlob = new Blob([new Uint8Array(array)], { type: 'image/gif' });
       outputDiv.innerHTML += '   ✅ Imagen de prueba creada\\n\\n';
       
-      // Test upload with preset
+      // Probar carga con preset
       outputDiv.innerHTML += '3. Probando carga con preset...\\n';
       const formData = new FormData();
       formData.append('file', testImageBlob, 'browser-debug-test.gif');
@@ -328,13 +328,13 @@ function App() {
       );
       
       outputDiv.innerHTML += `   Estado de respuesta: ${response.status}\\n`;
-      outputDiv.innerHTML += `   Headers: ${[...response.headers.entries()].map(([k, v]) => `\\n     ${k}: ${v}`).join('')}\\n`;
+      outputDiv.innerHTML += `   Encabezados: ${[...response.headers.entries()].map(([k, v]) => `\\n     ${k}: ${v}`).join('')}\\n`;
       
       if (response.ok) {
         const result = await response.json();
         outputDiv.innerHTML += '   ✅ Carga con preset exitosa!\\n';
         outputDiv.innerHTML += `   URL de imagen: ${result.secure_url}\\n`;
-        outputDiv.innerHTML += `   Public ID: ${result.public_id}\\n`;
+        outputDiv.innerHTML += `   ID público: ${result.public_id}\\n`;
       } else {
         const errorText = await response.text();
         outputDiv.innerHTML += `   ❌ Carga con preset fallida: ${errorText}\\n`;
@@ -344,15 +344,15 @@ function App() {
       
     } catch (error) {
       outputDiv.innerHTML += `\\n❌ Error en la prueba de depuración: ${error.message}\\n`;
-      console.error('Error in browser debug:', error);
+      console.error('Error en depuración del navegador:', error);
     }
   };
 
-  // Function to restore initial data
+  // Función para restaurar datos iniciales
   const handleRestoreInitialData = async () => {
     if (window.confirm('¿Está seguro de que desea restaurar los datos iniciales? Esto eliminará todos los incidentes agregados.')) {
       try {
-        // Delete all documents in the collection
+        // Eliminar todos los documentos en la colección
         const querySnapshot = await getDocs(collection(db, "accidents"));
         const deletePromises = [];
         
@@ -362,17 +362,17 @@ function App() {
         
         await Promise.all(deletePromises);
         
-        // Reload data
+        // Recargar datos
         await loadAccidentsData();
         showErrorNotification('Datos iniciales restaurados exitosamente.', 'info');
       } catch (error) {
-        logError('Restoring initial data', error);
+        logError('Restaurando datos iniciales', error);
         showErrorNotification('Error al restaurar los datos iniciales.');
       }
     }
   };
 
-  // Export data to file
+  // Exportar datos a archivo
   const handleExportData = () => {
     try {
       const dataStr = JSON.stringify(accidents, null, 2);
@@ -387,15 +387,15 @@ function App() {
       
       showErrorNotification('Datos exportados exitosamente!', 'info');
     } catch (error) {
-      logError('Exporting data', error);
+      logError('Exportando datos', error);
       showErrorNotification('Error al exportar datos.');
     }
   };
 
-  // Export data to Excel
+  // Exportar datos a Excel
   const handleExportToExcel = () => {
     try {
-      // Prepare data for Excel export
+      // Preparar datos para exportar a Excel
       const excelData = accidents.map(accident => ({
         'ID': accident.id || '',
         'Nombre del Incidente': accident.nombre || accident.name || '',
@@ -412,25 +412,25 @@ function App() {
         'Teléfono': accident.telefono || ''
       }));
 
-      // Create worksheet
+      // Crear hoja de cálculo
       const ws = XLSX.utils.json_to_sheet(excelData);
       
-      // Create workbook
+      // Crear libro de trabajo
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Incidentes');
       
-      // Export to Excel file
+      // Exportar a archivo Excel
       const exportFileName = `tetela-accidents-${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, exportFileName);
       
       showErrorNotification('Datos exportados a Excel exitosamente!', 'info');
     } catch (error) {
-      logError('Exporting to Excel', error);
+      logError('Exportando a Excel', error);
       showErrorNotification('Error al exportar datos a Excel.');
     }
   };
 
-  // Import data from file
+  // Importar datos desde archivo
   const handleImportData = (event) => {
     try {
       const file = event.target.files[0];
@@ -441,7 +441,7 @@ function App() {
         try {
           const data = JSON.parse(e.target.result);
           if (Array.isArray(data)) {
-            // Add each accident to Firebase
+            // Agregar cada accidente a Firebase
             for (const accident of data) {
               await addAccidentToFirebase(accident);
             }
@@ -450,33 +450,33 @@ function App() {
             showErrorNotification('Formato de archivo inválido. Debe ser un arreglo JSON.');
           }
         } catch (error) {
-          logError('Parsing imported file', error);
+          logError('Analizando archivo importado', error);
           showErrorNotification('Error al importar el archivo. Asegúrese de que sea un archivo JSON válido.');
         }
       };
       reader.readAsText(file);
       
-      // Reset file input
+      // Restablecer entrada de archivo
       event.target.value = '';
     } catch (error) {
-      logError('Importing data', error);
+      logError('Importando datos', error);
       showErrorNotification('Error al importar datos.');
     }
   };
 
-  // Toggle legend visibility
+  // Alternar visibilidad de la leyenda
   const toggleLegend = () => {
     setShowLegend(!showLegend);
     if (!showLegend) {
-      setShowForm(false); // Close form when opening legend
+      setShowForm(false); // Cerrar formulario al abrir leyenda
     }
   };
 
-  // Toggle form visibility
+  // Alternar visibilidad del formulario
   const toggleForm = () => {
     setShowForm(!showForm);
     if (!showForm) {
-      setShowLegend(false); // Close legend when opening form
+      setShowLegend(false); // Cerrar leyenda al abrir formulario
     }
   };
 
@@ -643,14 +643,14 @@ function App() {
                     mapView="public"
                   />
                   
-                  {/* Floating Buttons */}
+                  {/* Botones Flotantes */}
                   <div className="floating-buttons">
-                    {/* Legend Button - hide in public view */}
+                    {/* Botón de Leyenda - ocultar en vista pública */}
                     <button 
                       className={`floating-button legend-button ${showLegend ? 'active' : ''}`}
                       onClick={toggleLegend}
                       title="Mostrar/Ocultar Leyenda"
-                      style={{ display: 'none' }} // Hide in public view
+                      style={{ display: 'none' }} // Ocultar en vista pública
                     >
                       <FontAwesomeIcon icon={faInfoCircle} />
                     </button>
@@ -663,7 +663,7 @@ function App() {
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                     
-                    {/* Location Button */}
+                    {/* Botón de Ubicación */}
                     <button 
                       className="floating-button"
                       onClick={requestUserLocation}
@@ -719,12 +719,12 @@ function App() {
                       🌤️
                     </button>
                     
-                    {/* Civil Protection View Button - hide in public view */}
+                    {/* Botón de Vista de Protección Civil - ocultar en vista pública */}
                     <button
                       onClick={() => navigate('/proteccion-civil')}
                       style={{
                         position: 'absolute',
-                        top: '230px', // Positioned below weather button
+                        top: '230px', // Posicionado debajo del botón del clima
                         right: 0,
                         backgroundColor: '#007bff',
                         color: 'white',
@@ -737,7 +737,7 @@ function App() {
                         boxShadow: '0 6px 15px rgba(0, 0, 0, 0.4)',
                         zIndex: 1001,
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        display: 'none', // Hide in public view
+                        display: 'none', // Ocultar en vista pública
                         flexDirection: 'column'
                       }}
                       onMouseEnter={(e) => {
@@ -815,7 +815,7 @@ function App() {
                     </div>
                   )}
                   
-                  {/* Legend Panel */}
+                  {/* Panel de Leyenda */}
                   {showLegend && (
                     <div className="floating-panel legend-panel">
                       <div className="panel-header">
@@ -841,13 +841,13 @@ function App() {
                           <p><strong>Incidentes reportados:</strong> <br />{accidents.length} incidentes en Tetela de Ocampo</p>
                           <p><strong>Última actualización:</strong><br /> {new Date().toLocaleString('es-MX')}</p>
                           
-                          {/* Incident type counts */}
+                          {/* Conteo de tipos de incidentes */}
                           <div className="incident-type-counts">
                             <h4>Clasificación de Incidentes por Tipo:</h4>
                             {getIncidentTypeCounts()}
                           </div>
                           
-                          {/* Data Management Buttons */}
+                          {/* Botones de Gestión de Datos */}
                           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px' }}>
                             <button 
                               onClick={handleExportData} 
@@ -897,7 +897,7 @@ function App() {
                             </button>*/}
                           </div>
                           
-                          {/* Environment Info */}
+                          {/* Información del Entorno */}
                           <div style={{ 
                             marginTop: '15px', 
                             padding: '10px', 
@@ -915,7 +915,7 @@ function App() {
                     </div>
                   )}
                   
-                  {/* Form Panel */}
+                  {/* Panel de Formulario */}
                   {showForm && (
                     <div className="floating-panel form-panel">
                       <div className="panel-header">
@@ -941,7 +941,7 @@ function App() {
                     mapView="civil-protection"
                   />
                   
-                  {/* Floating Buttons */}
+                  {/* Botones Flotantes */}
                   <div className="floating-buttons">
                     <button 
                       className={`floating-button legend-button ${showLegend ? 'active' : ''}`}
@@ -959,7 +959,7 @@ function App() {
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                     
-                    {/* Location Button */}
+                    {/* Botón de Ubicación */}
                     <button 
                       className="floating-button"
                       onClick={requestUserLocation}
@@ -1015,7 +1015,7 @@ function App() {
                       🌤️
                     </button>
                     
-                    {/* View Toggle Buttons - Moved below weather button */}
+                    {/* Botones de Cambio de Vista - Movido debajo del botón del clima */}
                     <ViewToggleButtons currentView={mapView} />
                   </div>
                   
@@ -1078,7 +1078,7 @@ function App() {
                     </div>
                   )}
                   
-                  {/* Legend Panel */}
+                  {/* Panel de Leyenda */}
                   {showLegend && (
                     <div className="floating-panel legend-panel">
                       <div className="panel-header">
@@ -1104,13 +1104,13 @@ function App() {
                           <p><strong>Incidentes reportados:</strong> <br />{accidents.length} incidentes en Tetela de Ocampo</p>
                           <p><strong>Última actualización:</strong><br /> {new Date().toLocaleString('es-MX')}</p>
                           
-                          {/* Incident type counts */}
+                          {/* Conteo de tipos de incidentes */}
                           <div className="incident-type-counts">
                             <h4>Clasificación de Incidentes por Tipo:</h4>
                             {getIncidentTypeCounts()}
                           </div>
                           
-                          {/* Data Management Buttons */}
+                          {/* Botones de Gestión de Datos */}
                           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px' }}>
                             <button 
                               onClick={handleExportData} 
@@ -1162,7 +1162,7 @@ function App() {
                             */}
                           </div>
                           
-                          {/* Environment Info */}
+                          {/* Información del Entorno */}
                           <div style={{ 
                             marginTop: '15px', 
                             padding: '10px', 
@@ -1180,7 +1180,7 @@ function App() {
                     </div>
                   )}
                   
-                  {/* Form Panel */}
+                  {/* Panel de Formulario */}
                   {showForm && (
                     <div className="floating-panel form-panel">
                       <div className="panel-header">

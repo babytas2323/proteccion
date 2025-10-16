@@ -7,7 +7,7 @@ import { faMapMarkerAlt, faCrosshairs, faLocationArrow,faInfoCircle, faPhone, fa
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import * as turf from '@turf/turf';
 
-// Fix for default marker icons in Leaflet
+// Corrección para los iconos de marcador predeterminados en Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom hook to update map center
+// Hook personalizado para actualizar el centro del mapa
 function ChangeView({ center, zoom }) {
   const map = useMap();
   useEffect(() => {
@@ -24,26 +24,26 @@ function ChangeView({ center, zoom }) {
   return null;
 }
 
-// Function to format date in Spanish: "10 de octubre de 2025"
+// Función para formatear la fecha en español: "10 de octubre de 2025"
 const formatDateInSpanish = (dateString) => {
   try {
     if (!dateString) return 'No especificada';
     
-    // Spanish month names
+    // Nombres de meses en español
     const months = [
       'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
       'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
     ];
     
-    // Parse the date string directly to avoid timezone issues
-    // Assuming the format is YYYY-MM-DD
+    // Analizar la cadena de fecha directamente para evitar problemas de zona horaria
+    // Asumiendo que el formato es AAAA-MM-DD
     const parts = dateString.split('-');
     if (parts.length === 3) {
       const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+      const month = parseInt(parts[1], 10) - 1; // El mes es indexado desde 0
       const day = parseInt(parts[2], 10);
       
-      // Validate the parsed values
+      // Validar los valores analizados
       if (year > 0 && month >= 0 && month < 12 && day > 0 && day <= 31) {
         return `${day} de ${months[month]} de ${year}`;
       }
@@ -51,100 +51,100 @@ const formatDateInSpanish = (dateString) => {
     
     return 'Fecha no válida';
   } catch (error) {
-    console.error('Error formatting date in Spanish:', error);
+    console.error('Error al formatear la fecha en español:', error);
     return 'Fecha no disponible';
   }
 };
 
-// Function to convert 24-hour time to 12-hour time with AM/PM
+// Función para convertir el tiempo de 24 horas a 12 horas con AM/PM
 const formatTimeTo12Hour = (timeString) => {
   try {
     if (!timeString) return 'No especificada';
     
-    // Split the time string (assuming format is HH:MM)
+    // Dividir la cadena de tiempo (asumiendo el formato es HH:MM)
     const parts = timeString.split(':');
     if (parts.length >= 2) {
       let hours = parseInt(parts[0], 10);
       const minutes = parts[1];
       
-      // Validate hours and minutes
+      // Validar horas y minutos
       if (hours >= 0 && hours <= 23 && minutes && minutes.length === 2) {
-        // Determine AM/PM
+        // Determinar AM/PM
         const ampm = hours >= 12 ? 'PM' : 'AM';
         
-        // Convert to 12-hour format
+        // Convertir al formato de 12 horas
         hours = hours % 12;
-        if (hours === 0) hours = 12; // 0 should be 12
+        if (hours === 0) hours = 12; // 0 debe ser 12
         
         return `${hours}:${minutes} ${ampm}`;
       }
     }
     
-    // If parsing fails, return the original string
+    // Si el análisis falla, devolver la cadena original
     return timeString || 'No especificada';
   } catch (error) {
-    console.error('Error formatting time to 12-hour format:', error);
+    console.error('Error al formatear el tiempo al formato de 12 horas:', error);
     return timeString || 'No especificada';
   }
 };
 
 const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = 'public' }) => {
   const mapRef = useRef();
-  const [mapCenter, setMapCenter] = useState([19.8167, -97.8167]); // Default to Tetela de Ocampo
+  const [mapCenter, setMapCenter] = useState([19.8167, -97.8167]); // Predeterminado a Tetela de Ocampo
   const [mapZoom, setMapZoom] = useState(13);
   const [showRadar, setShowRadar] = useState(true);
 
-  // Function to get appropriate icon based on incident type
+  // Función para obtener el icono apropiado basado en el tipo de incidente
   const getIconForIncident = (incident) => {
-    // Determine icon based on incident type
+    // Determinar el icono basado en el tipo de incidente
     const lowerTipo = (incident.tipo || incident.Tipo || 'Otro').toLowerCase();
     
-    // Icon configuration
+    // Configuración del icono
     let iconType = 'fas fa-exclamation-triangle';
-    let iconColor = '#dc3545'; // Default red color
+    let iconColor = '#dc3545'; // Color rojo predeterminado
     
     if (lowerTipo.includes('huracán') || lowerTipo.includes('hurricane')) {
       iconType = 'fas fa-hurricane';
-      iconColor = 'white'; // Blue
+      iconColor = 'white'; // Azul
     } else if (lowerTipo.includes('inundacion') || lowerTipo.includes('inundación') || lowerTipo.includes('flood') || lowerTipo.includes('rios desbordados') || lowerTipo.includes('ríos desbordados') || lowerTipo.includes('corrientes fuertes')) {
       iconType = 'fas fa-water';
-     iconColor = 'white'; // Cyan
+     iconColor = 'white'; // Cian
     } else if (lowerTipo.includes('derrumbe') || lowerTipo.includes('deslizamiento') || lowerTipo.includes('landslide') || lowerTipo.includes('tierra o laderas') || lowerTipo.includes('puente') || lowerTipo.includes('caminos')) {
       iconType = 'fas fa-mountain';
-      iconColor = 'white';// Gray
+      iconColor = 'white';// Gris
     } else if (lowerTipo.includes('viento') || lowerTipo.includes('wind') || lowerTipo.includes('fuerte')) {
       iconType = 'fas fa-wind';
-    iconColor = 'white'; // Purple
+    iconColor = 'white'; // Púrpura
     } else if (lowerTipo.includes('fuego') || lowerTipo.includes('fire') || lowerTipo.includes('incendio') || lowerTipo.includes('cortocircuito') || lowerTipo.includes('gas')) {
       iconType = 'fas fa-fire';
-     iconColor = 'white'; // Orange
+     iconColor = 'white'; // Naranja
     } else if (lowerTipo.includes('terremoto') || lowerTipo.includes('earthquake')) {
       iconType = 'fas fa-home';
-      iconColor = 'white'; // Green
+      iconColor = 'white'; // Verde
     } else if (lowerTipo.includes('lluvia') || lowerTipo.includes('rain')) {
       iconType = 'fas fa-cloud-rain';
-     iconColor = 'white'; // Cyan
+     iconColor = 'white'; // Cian
     } else if (lowerTipo.includes('rayo') || lowerTipo.includes('lightning')) {
       iconType = 'fas fa-bolt';
-    iconColor = 'white'; // Yellow
+    iconColor = 'white'; // Amarillo
     } else if (lowerTipo.includes('arbol') || lowerTipo.includes('árbol') || lowerTipo.includes('tree')) {
       iconType = 'fas fa-tree';
-      iconColor = 'white';; // Green
+      iconColor = 'white';; // Verde
     } else if (lowerTipo.includes('techo') || lowerTipo.includes('casa') || lowerTipo.includes('roof') || lowerTipo.includes('house')) {
       iconType = 'fas fa-house-damage';
-   iconColor = 'white';// Red
+   iconColor = 'white';// Rojo
     } else if (lowerTipo.includes('poste') || lowerTipo.includes('postes') || lowerTipo.includes('cables') || lowerTipo.includes('electric')) {
       iconType = 'fas fa-bolt';
-      iconColor = 'white';// Yellow
+      iconColor = 'white';// Amarillo
     } else if (lowerTipo.includes('vehiculo') || lowerTipo.includes('vehículo') || lowerTipo.includes('vehicle') || lowerTipo.includes('car')) {
       iconType = 'fas fa-car';
-      iconColor = 'white'; // Gray
+      iconColor = 'white'; // Gris
     } else if (lowerTipo.includes('objeto') || lowerTipo.includes('objetos') || lowerTipo.includes('volador') || lowerTipo.includes('voladores') || lowerTipo.includes('object') || lowerTipo.includes('flying')) {
       iconType = 'fas fa-wind';
-      iconColor = 'white'; // Purple
+      iconColor = 'white'; // Púrpura
     }
 
-    // Determine risk level for radar animation
+    // Determinar el nivel de riesgo para la animación de radar
     const riskLevel = (incident.nivel_riesgo || incident.riskLevel || 'default').toString().toLowerCase();
     let radarClass = 'radar-icon default';
     
@@ -156,7 +156,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
       radarClass = 'radar-icon high';
     }
 
-    // Create custom icon using FontAwesome with radar animation
+    // Crear icono personalizado usando FontAwesome con animación de radar
     const icon = L.divIcon({
       className: 'custom-icon',
       html: `<div class="${radarClass}" style="display: flex; align-items: center; justify-content: center; ">
@@ -169,34 +169,34 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
     return icon;
   };
 
-  // Function to determine if a marker should be shown based on the current view
+  // Función para determinar si se debe mostrar un marcador basado en la vista actual
   const shouldShowMarker = (incident) => {
-    // For public view, show all incidents
+    // Para la vista pública, mostrar todos los incidentes
     if (mapView === 'public') {
       return true;
     }
     
-    // For civil protection view, show all incidents as well
-    // You can add specific filtering logic here if needed
+    // Para la vista de protección civil, mostrar todos los incidentes también
+    // Puedes agregar lógica de filtrado específica aquí si es necesario
     return true;
   };
 
-  // Function to get popup content based on the view
+  // Función para obtener el contenido del popup basado en la vista
   const getPopupContent = (incident) => {
-    // Function to get risk level color
+    // Función para obtener el color del nivel de riesgo
     const getRiskLevelColor = (riskLevel) => {
       const normalizedRiskLevel = riskLevel.toString().toLowerCase();
       if (normalizedRiskLevel.includes('bajo') || normalizedRiskLevel.includes('low')) {
-        return '#28a745'; // green
+        return '#28a745'; // verde
       } else if (normalizedRiskLevel.includes('medio') || normalizedRiskLevel.includes('medium')) {
-        return '#ffc107'; // yellow
+        return '#ffc107'; // amarillo
       } else if (normalizedRiskLevel.includes('alto') || normalizedRiskLevel.includes('high') || normalizedRiskLevel.includes('crítico')) {
-        return '#dc3545'; // red
+        return '#dc3545'; // rojo
       }
-      return '#6c757d'; // default gray
+      return '#6c757d'; // gris predeterminado
     };
 
-    // Function to get risk level badge
+    // Función para obtener la insignia del nivel de riesgo
     const getRiskLevelBadge = (riskLevel) => {
       const color = getRiskLevelColor(riskLevel);
       return (
@@ -216,7 +216,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
     };
 
     if (mapView === 'public') {
-      // Simplified popup content for public view with enhanced styling
+      // Contenido de popup simplificado para la vista pública con estilo mejorado
       return (
         <div style={{ 
           minWidth: '250px', 
@@ -271,7 +271,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
         </div>
       );
     } else {
-      // Detailed popup content for civil protection view with enhanced styling
+      // Contenido de popup detallado para la vista de protección civil con estilo mejorado
       return (
         <div style={{ 
           minWidth: '280px', 
@@ -382,7 +382,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
             <div style={{ marginBottom: '8px', textAlign: 'center' }}>
               <button
                 onClick={() => {
-                  // Toggle image visibility
+                  // Alternar visibilidad de la imagen
                   const imgElement = document.getElementById(`incident-image-${incident.id || Math.random()}`);
                   if (imgElement) {
                     if (imgElement.style.display === 'none') {
@@ -443,7 +443,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
             </div>
           )}
           
-          {/* Timestamp */}
+          {/* Marca de tiempo */}
           <div style={{ 
             marginTop: '10px', 
             paddingTop: '10px', 
@@ -454,9 +454,9 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            {/* Action buttons */}
+            {/* Botones de acción */}
             <div style={{ display: 'flex', gap: '8px' }}>
-              {/* Call button */}
+              {/* Botón de llamada */}
               {incident.telefono && incident.telefono !== 'No especificado' && (
                 <a 
                   href={`tel:${incident.telefono}`}
@@ -488,7 +488,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
                 </a>
               )}
               
-              {/* WhatsApp button */}
+              {/* Botón de WhatsApp */}
               {incident.telefono && incident.telefono !== 'No especificado' && (
                 <a 
                   href={`https://wa.me/${incident.telefono.replace(/\D/g, '')}?text=Estamos%20revisando%20su%20reporte.%20En%20un%20momento%20lo%20atendemos.`}
@@ -522,7 +522,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
                 </a>
               )}
               
-              {/* Google Maps button */}
+              {/* Botón de Google Maps */}
               {incident.coordenadas && Array.isArray(incident.coordenadas) && incident.coordenadas.length >= 2 && (
                 <a 
                   href={`https://www.google.com/maps/dir/?api=1&destination=${incident.coordenadas[1]},${incident.coordenadas[0]}`}
@@ -557,7 +557,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
               )}
             </div>
             
-            {/* Report timestamp */}
+            {/* Marca de tiempo del reporte */}
             <p style={{ margin: '0', textAlign: 'right' }}>
               Reporte: {new Date().toLocaleString('es-MX')}
             </p>
@@ -567,14 +567,14 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
     }
   };
 
-  // Add this useEffect to ensure the map re-renders when sensors change
+  // Agregar este useEffect para asegurar que el mapa se vuelva a renderizar cuando los sensores cambien
   useEffect(() => {
-    // This effect will run whenever the sensors prop changes
-    // It doesn't need to do anything, but its presence ensures
-    // the component re-renders with new sensor data
+    // Este efecto se ejecutará cada vez que la propiedad sensors cambie
+    // No necesita hacer nada, pero su presencia asegura
+    // que el componente se vuelva a renderizar con nuevos datos de sensores
   }, [sensors]);
 
-  // Effect to update map center when user location changes
+  // Efecto para actualizar el centro del mapa cuando la ubicación del usuario cambia
   useEffect(() => {
     if (userLocation) {
       setMapCenter([userLocation.lat, userLocation.lng]);
@@ -582,11 +582,11 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
     }
   }, [userLocation]);
 
-  // Effect to handle location finding - REMOVED automatic geolocation request
-  // The geolocation is now handled by the button in App.jsx
+  // Efecto para manejar la búsqueda de ubicación - SE ELIMINÓ la solicitud automática de geolocalización
+  // La geolocalización ahora es manejada por el botón en App.jsx
   useEffect(() => {
-    // Removed automatic geolocation request
-    // This effect is now only used to respond to userLocation changes
+    // Se eliminó la solicitud automática de geolocalización
+    // Este efecto ahora solo se usa para responder a los cambios de userLocation
   }, [onLocationFound]);
 
   return (
@@ -605,7 +605,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
-        {/* User Location Marker */}
+        {/* Marcador de Ubicación del Usuario */}
         {userLocation && (
           <Marker 
             position={[userLocation.lat, userLocation.lng]}
@@ -637,15 +637,15 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
           </Marker>
         )}
 
-        {/* Incident Markers */}
+        {/* Marcadores de Incidentes */}
         {sensors && Array.isArray(sensors) ? sensors.map((point, index) => {
           try {
-            // Skip if marker shouldn't be shown based on view
+            // Saltar si el marcador no debe mostrarse basado en la vista
             if (!shouldShowMarker(point)) {
               return null;
             }
             
-            // Get coordinates with better validation
+            // Obtener coordenadas con mejor validación
             let lat, lng;
             if (point && point.coordenadas && Array.isArray(point.coordenadas) && point.coordenadas.length >= 2) {
               lat = point.coordenadas[1];
@@ -655,12 +655,12 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
               lng = point.longitude || point.Longitud;
             }
             
-            // Skip if coordinates are invalid
+            // Saltar si las coordenadas son inválidas
             if (lat === undefined || lng === undefined || isNaN(lat) || isNaN(lng)) {
               return null;
             }
             
-            // Get appropriate icon
+            // Obtener el icono apropiado
             const icon = getIconForIncident(point);
             
             return (
@@ -675,13 +675,13 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
               </Marker>
             );
           } catch (error) {
-            console.error('Error processing marker:', error, point);
-            return null; // Skip this marker if there's an error
+            console.error('Error procesando marcador:', error, point);
+            return null; // Saltar este marcador si hay un error
           }
         }) : null}
       </MapContainer>
       
-      {/* View Indicator */}
+      {/* Indicador de Vista */}
       <div style={{
         position: 'absolute',
         top: '20px',
