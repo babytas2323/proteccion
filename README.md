@@ -2,6 +2,52 @@
 
 Sistema de monitoreo y reporte de riesgos naturales para Tetela de Ocampo, Puebla.
 
+## Tecnologías Utilizadas
+
+### Frontend
+- **React** - Biblioteca de JavaScript para construir interfaces de usuario. En este proyecto, React se utiliza para crear todos los componentes de la interfaz, gestionar el estado de la aplicación y permitir la interacción con el usuario.
+
+- **React DOM** - Punto de entrada del DOM específico para React. Se encarga de renderizar los componentes de React en el navegador web y manejar las actualizaciones del DOM cuando cambia el estado.
+
+- **Vite** - Herramienta de compilación que proporciona un entorno de desarrollo más rápido. Vite mejora la experiencia de desarrollo con un servidor de desarrollo rápido y reconstrucciones instantáneas gracias a su enfoque de módulos ES.
+
+- **Leaflet** - Biblioteca de mapas interactivos de código abierto. Leaflet permite mostrar el mapa donde se visualizan los incidentes reportados y proporciona funcionalidades de interacción con el mapa como zoom y pan.
+
+- **React Leaflet** - Componentes de React para Leaflet. Facilita la integración de Leaflet en una aplicación React, permitiendo crear componentes reutilizables para marcadores, polígonos y otras capas del mapa.
+
+- **Font Awesome** - Conjunto de iconos vectoriales. Se utiliza para mostrar iconos visuales en la interfaz de usuario, como los botones flotantes y símbolos en los marcadores del mapa.
+
+- **Turf.js** - Biblioteca de análisis espacial avanzado. Turf.js ayuda a realizar cálculos geoespaciales como distancias entre puntos, buffers y otras operaciones con datos geográficos.
+
+### Backend
+- **Node.js** - Entorno de ejecución de JavaScript. Permite ejecutar código JavaScript en el servidor, facilitando la creación del backend API para manejar los reportes de incidentes.
+
+- **Express** - Framework web para Node.js. Express proporciona una estructura para definir rutas, middleware y manejadores de solicitudes HTTP en el backend del sistema.
+
+- **Cors** - Middleware para habilitar CORS en Express. Permite que el frontend (que corre en un puerto diferente) pueda comunicarse con el backend, evitando restricciones de seguridad del navegador.
+
+- **Multer** - Middleware para manejar multipart/form-data. Es fundamental para procesar las imágenes adjuntas en los reportes de incidentes, permitiendo su carga al servidor.
+
+- **Dotenv** - Módulo que carga variables de entorno desde un archivo .env. Se utiliza para almacenar de forma segura credenciales y configuraciones sensibles como claves de API.
+
+### Base de Datos y Almacenamiento
+- **Firebase** - Plataforma de desarrollo de aplicaciones web y móvil de Google. Firebase Firestore se utiliza como base de datos principal para almacenar los datos estructurados de los incidentes con sincronización en tiempo real.
+
+- **Cloudinary** - Servicio de gestión de medios en la nube. Cloudinary almacena las imágenes de los incidentes, optimizándolas automáticamente y entregándolas a través de una CDN para mejor rendimiento.
+
+- **Node Fetch** - Cliente HTTP para Node.js. Permite que el backend realice solicitudes HTTP a servicios externos como la API de Cloudinary para cargar imágenes.
+
+- **Fetch Blob** - Implementación de Blob para fetch. Facilita el manejo de datos binarios (imágenes) en las solicitudes HTTP desde el backend hacia servicios como Cloudinary.
+
+- **Formdata Node** - Implementación de FormData para Node.js. Permite construir objetos FormData que se requieren para enviar imágenes al API de Cloudinary.
+
+### Utilidades y Herramientas
+- **XLSX** - Biblioteca para leer y escribir archivos Excel. Se utiliza para exportar los datos de incidentes a formato Excel, facilitando la generación de informes fuera de la aplicación.
+
+- **ESLint** - Herramienta de análisis de código estático. ESLint ayuda a mantener la calidad del código identificando errores, problemas de estilo y posibles bugs antes de ejecutar la aplicación.
+
+- **React Router DOM** - Enrutador para aplicaciones React. Gestiona la navegación entre diferentes vistas de la aplicación, como la vista principal y la vista especializada para protección civil.
+
 ## Actualización Importante
 
 Este proyecto ha sido actualizado para utilizar Firebase como base de datos principal y Cloudinary para el almacenamiento de imágenes, mejorando significativamente la escalabilidad y el rendimiento de la aplicación.
