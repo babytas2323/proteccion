@@ -49,24 +49,55 @@ const SensorForm = ({ onAddSensor }) => {
     if (file) {
       // Check if file is an image
       if (!file.type.startsWith('image/')) {
-        showErrorNotification('Por favor seleccione un archivo de imagen válido (JPEG, PNG, etc.)', 'warning');
+        showErrorNotification('Por favor seleccione un archivo de imagen válido (JPEG, PNG, GIF, WEBP, SVG)', 'warning');
+        e.target.value = ''; // Clear the input
         return;
       }
 
       // Check file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
-        showErrorNotification('La imagen es demasiado grande. El tamaño máximo es 5MB.', 'warning');
+        showErrorNotification(`La imagen es demasiado grande (${(file.size / (1024 * 1024)).toFixed(2)} MB). El tamaño máximo es 5MB.`, 'warning');
+        e.target.value = ''; // Clear the input
         return;
       }
 
-      setImage(file);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
+      // Check image dimensions (optional - you can adjust these limits)
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        // Optional: Check minimum and maximum dimensions
+        const minWidth = 100;
+        const maxWidth = 5000;
+        const minHeight = 100;
+        const maxHeight = 5000;
+        
+        if (img.width < minWidth || img.height < minHeight) {
+          showErrorNotification(`La imagen es demasiado pequeña (${img.width}x${img.height}px). El tamaño mínimo es ${minWidth}x${minHeight}px.`, 'warning');
+          e.target.value = ''; // Clear the input
+          return;
+        }
+        
+        if (img.width > maxWidth || img.height > maxHeight) {
+          showErrorNotification(`La imagen es demasiado grande (${img.width}x${img.height}px). El tamaño máximo es ${maxWidth}x${maxHeight}px.`, 'warning');
+          e.target.value = ''; // Clear the input
+          return;
+        }
+        
+        // If all validations pass, set the image
+        setImage(file);
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
       };
-      reader.readAsDataURL(file);
+      
+      img.onerror = () => {
+        showErrorNotification('Error al leer la imagen. Por favor intente con otra imagen.', 'warning');
+        e.target.value = ''; // Clear the input
+      };
     } else {
       setImage(null);
       setImagePreview(null);
@@ -960,6 +991,16 @@ const SensorForm = ({ onAddSensor }) => {
                     border: '1px solid #ddd'
                   }}
                 />
+                <div style={{
+                  marginTop: '10px',
+                  padding: '10px',
+                  backgroundColor: '#d4edda',
+                  border: '1px solid #c3e6cb',
+                  borderRadius: '5px',
+                  color: '#155724'
+                }}>
+                  ✓ La imagen ha sido cargada correctamente. Formato y tamaño válidos.
+                </div>
               </div>
             )}
           </div>
@@ -1013,66 +1054,72 @@ const SensorForm = ({ onAddSensor }) => {
             paddingTop: '25px',
             borderTop: '1px solid #dee2e6'
           }}>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              style={{
-                backgroundColor: isSubmitting ? '#6c757d' : '#007bff',
-                color: 'white',
-                padding: '14px 28px',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                fontSize: '18px',
-                fontWeight: '600',
-                boxShadow: '0 4px 6px rgba(0,123,255,0.3)',
-                transition: 'all 0.3s',
-                minWidth: '200px',
-                marginRight: '10px'
-              }}
-              onMouseOver={(e) => {
-                if (!isSubmitting) {
-                  e.target.style.transform = 'translateY(-2px)';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!isSubmitting) {
-                  e.target.style.transform = 'translateY(0)';
-                }
-              }}
-            >
-              {isSubmitting ? '📤 Guardando...' : '🌪️ Reportar'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                // Close the form panel
-                const closeButtons = document.querySelectorAll('.close-button');
-                if (closeButtons.length > 0) {
-                  closeButtons[0].click();
-                } else {
-                  // Fallback: navigate to home
-                  navigate('/');
-                }
-              }}
-              style={{
-                backgroundColor: '#6c757d',
-                color: 'white',
-                padding: '14px 28px',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '18px',
-                fontWeight: '600',
-                boxShadow: '0 4px 6px rgba(108,117,125,0.3)',
-                transition: 'all 0.3s',
-                minWidth: '200px'
-              }}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-            >
-              ❌ Cancelar
-            </button>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '20px',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                style={{
+                  backgroundColor: isSubmitting ? '#6c757d' : '#007bff',
+                  color: 'white',
+                  padding: '14px 28px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  boxShadow: '0 4px 6px rgba(0,123,255,0.3)',
+                  transition: 'all 0.3s',
+                  minWidth: '200px'
+                }}
+                onMouseOver={(e) => {
+                  if (!isSubmitting) {
+                    e.target.style.transform = 'translateY(-2px)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!isSubmitting) {
+                    e.target.style.transform = 'translateY(0)';
+                  }
+                }}
+              >
+                {isSubmitting ? '📤 Guardando...' : '🌪️ Reportar'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // Close the form panel
+                  const closeButtons = document.querySelectorAll('.close-button');
+                  if (closeButtons.length > 0) {
+                    closeButtons[0].click();
+                  } else {
+                    // Fallback: navigate to home
+                    navigate('/');
+                  }
+                }}
+                style={{
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  padding: '14px 28px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  boxShadow: '0 4px 6px rgba(108,117,125,0.3)',
+                  transition: 'all 0.3s',
+                  minWidth: '200px'
+                }}
+                onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                ❌ Cancelar
+              </button>
+            </div>
           </div>
         </form>
       </div>

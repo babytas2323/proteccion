@@ -177,37 +177,73 @@ function App() {
   const handleAddAccident = async (newAccident, imageFile) => {
     try {
       console.log('Attempting to save accident:', newAccident);
+      console.log('Image file received:', imageFile);
       
-      // If there's an image, upload it to Cloudinary first
+      // If there's an image, upload it to Cloudinary directly
       if (imageFile) {
         try {
-          // Create FormData for Cloudinary upload
-          const formData = new FormData();
-          formData.append('image', imageFile);
+          console.log('Starting image upload to Cloudinary...');
           
-          // Upload image to Cloudinary via backend
-          const response = await fetch('http://localhost:3004/api/upload', {
-            method: 'POST',
-            body: formData
+          // Log image file details
+          console.log('Image details:', {
+            name: imageFile.name,
+            size: imageFile.size,
+            type: imageFile.type
           });
           
+          // Create FormData for Cloudinary upload
+          const formData = new FormData();
+          formData.append('file', imageFile);
+          formData.append('upload_preset', 'accident_reports_preset');
+          formData.append('folder', 'accident_reports');
+          
+          console.log('Cloudinary upload data:', {
+            cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
+            fileName: imageFile.name,
+            fileSize: imageFile.size,
+            fileType: imageFile.type
+          });
+          
+          // Upload image directly to Cloudinary using unsigned upload with preset
+          const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+            {
+              method: 'POST',
+              body: formData
+            }
+          );
+          
+          console.log('Cloudinary response status:', response.status);
+          console.log('Cloudinary response headers:', [...response.headers.entries()]);
+          
           if (!response.ok) {
-            throw new Error(`Failed to upload image: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('Cloudinary upload error response:', errorText);
+            throw new Error(`Failed to upload image: ${response.status} ${response.statusText} - ${errorText}`);
           }
           
           const result = await response.json();
           console.log('Image uploaded to Cloudinary:', result);
           
           // Add image URL to accident data
-          newAccident.imageUrl = result.url;
+          newAccident.imageUrl = result.secure_url;
           newAccident.imagePublicId = result.public_id;
         } catch (uploadError) {
           console.error('Error uploading image to Cloudinary:', uploadError);
-          showErrorNotification('Error al cargar la imagen. El incidente se guardará sin imagen.', 'warning');
+          // Verificar si es un error de conexión
+          if (uploadError instanceof TypeError && uploadError.message.includes('fetch')) {
+            showErrorNotification('Error de conexión al subir la imagen. Verifique su conexión a internet.', 'error');
+          } else {
+            showErrorNotification(`Error al cargar la imagen: ${uploadError.message}`, 'error');
+          }
+          // Continue without image if upload fails
         }
+      } else {
+        console.log('No image file provided');
       }
       
       // Save accident data to Firebase
+      console.log('Saving accident data to Firebase:', newAccident);
       return await addAccidentToFirebase(newAccident);
     } catch (error) {
       logError('Adding accident', error);
@@ -239,6 +275,73 @@ function App() {
       );
     } else {
       showErrorNotification('La geolocalización no es compatible con este navegador.', 'error');
+    }
+  };
+
+  // Debug function for image upload in browser
+  const debugImageUploadInBrowser = async () => {
+    const outputDiv = document.getElementById('debug-output');
+    if (!outputDiv) return;
+    
+    outputDiv.innerHTML = 'Iniciando prueba de depuración...\\n';
+    
+    try {
+      outputDiv.innerHTML += '1. Verificando variables de entorno...\\n';
+      outputDiv.innerHTML += `   Cloud name: ${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}\\n`;
+      outputDiv.innerHTML += `   API key exists: ${!!import.meta.env.VITE_CLOUDINARY_API_KEY}\\n`;
+      
+      if (!import.meta.env.VITE_CLOUDINARY_CLOUD_NAME) {
+        outputDiv.innerHTML += '   ❌ ERROR: VITE_CLOUDINARY_CLOUD_NAME is missing\\n';
+        return;
+      }
+      
+      outputDiv.innerHTML += '   ✅ Variables de entorno presentes\\n\\n';
+      
+      // Create test image (1x1 pixel GIF)
+      outputDiv.innerHTML += '2. Creando imagen de prueba...\\n';
+      const testImageData = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      const binary = atob(testImageData);
+      const array = [];
+      for (let i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+      }
+      const testImageBlob = new Blob([new Uint8Array(array)], { type: 'image/gif' });
+      outputDiv.innerHTML += '   ✅ Imagen de prueba creada\\n\\n';
+      
+      // Test upload with preset
+      outputDiv.innerHTML += '3. Probando carga con preset...\\n';
+      const formData = new FormData();
+      formData.append('file', testImageBlob, 'browser-debug-test.gif');
+      formData.append('upload_preset', 'accident_reports_preset');
+      formData.append('folder', 'accident_reports');
+      
+      outputDiv.innerHTML += '   Enviando solicitud a Cloudinary...\\n';
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+      
+      outputDiv.innerHTML += `   Estado de respuesta: ${response.status}\\n`;
+      outputDiv.innerHTML += `   Headers: ${[...response.headers.entries()].map(([k, v]) => `\\n     ${k}: ${v}`).join('')}\\n`;
+      
+      if (response.ok) {
+        const result = await response.json();
+        outputDiv.innerHTML += '   ✅ Carga con preset exitosa!\\n';
+        outputDiv.innerHTML += `   URL de imagen: ${result.secure_url}\\n`;
+        outputDiv.innerHTML += `   Public ID: ${result.public_id}\\n`;
+      } else {
+        const errorText = await response.text();
+        outputDiv.innerHTML += `   ❌ Carga con preset fallida: ${errorText}\\n`;
+      }
+      
+      outputDiv.innerHTML += '\\n=== Prueba de depuración completada ===\\n';
+      
+    } catch (error) {
+      outputDiv.innerHTML += `\\n❌ Error en la prueba de depuración: ${error.message}\\n`;
+      console.error('Error in browser debug:', error);
     }
   };
 
@@ -408,6 +511,8 @@ function App() {
                 </div>
               </div>
             )}
+            
+
             
             {error && (
               <div style={{
