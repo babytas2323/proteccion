@@ -600,8 +600,18 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
         attributionControl={true}
       >
         <ChangeView center={mapCenter} zoom={mapZoom} />
+
+        {/* Capa de Tiles de OpenStreetMap */}
+        {/*https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png  --Mapa base clásico*/}
+        {/*https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png  Colores vivos, ideal para emergencias*/}
+        {/*https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png    --muy lento--   Mapa topográfico con curvas de nivel */}
+        {/*https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png --poco visible-- Minimalista, fondo claro */}
+        {/*https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png   --muy oscuro--  Minimalista, fondo oscuro  */}
+        {/*https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x} --muy bueno-- Mapa de satélite */}
+        {/*https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png --Enfocado en ciclistas*/}
+     
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
