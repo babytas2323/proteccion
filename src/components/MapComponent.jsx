@@ -525,7 +525,7 @@ const MapComponent = ({ sensors = [], userLocation, onLocationFound, mapView = '
               {/* Google Maps button */}
               {incident.coordenadas && Array.isArray(incident.coordenadas) && incident.coordenadas.length >= 2 && (
                 <a 
-                  href={`https://www.google.com/maps?q=${incident.coordenadas[1]},${incident.coordenadas[0]}`}
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${incident.coordenadas[1]},${incident.coordenadas[0]}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
