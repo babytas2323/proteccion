@@ -54,6 +54,7 @@ function App() {
   const [mostrarClima, setMostrarClima] = useState(false); // State for weather widget
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDebug, setShowDebug] = useState(false); // For debugging image uploads
 
   // Function to get risk level from accident data
   const getRiskLevel = (accident) => {
@@ -278,6 +279,8 @@ function App() {
     }
   };
 
+
+
   // Debug function for image upload in browser
   const debugImageUploadInBrowser = async () => {
     const outputDiv = document.getElementById('debug-output');
@@ -483,6 +486,23 @@ function App() {
         <div className="App">
           <header className="app-header">
             <h1>Sistema de Detección de Riesgos - Tetela de Ocampo</h1>
+            <button 
+              onClick={() => setShowDebug(!showDebug)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '10px',
+                backgroundColor: '#ff6b6b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '5px 10px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              {showDebug ? 'Cerrar Debug' : 'Debug Image Upload'}
+            </button>
           </header>
           
           <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
@@ -508,6 +528,70 @@ function App() {
                   textAlign: 'center'
                 }}>
                   <p>Cargando datos...</p>
+                </div>
+              </div>
+            )}
+            
+            {showDebug && (
+              <div style={{
+                position: 'fixed',
+                top: '50px',
+                right: '10px',
+                backgroundColor: 'white',
+                border: '2px solid #007bff',
+                borderRadius: '8px',
+                padding: '15px',
+                zIndex: 9998,
+                maxWidth: '400px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '10px'
+                }}>
+                  <h3 style={{ margin: 0, color: '#007bff' }}>Debug Image Upload</h3>
+                  <button 
+                    onClick={() => setShowDebug(false)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '20px',
+                      cursor: 'pointer',
+                      color: '#777'
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                <p>Presiona el botón para ejecutar la prueba de carga de imagen:</p>
+                <button 
+                  onClick={debugImageUploadInBrowser}
+                  style={{
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '8px 16px',
+                    cursor: 'pointer',
+                    width: '100%'
+                  }}
+                >
+                  Ejecutar Prueba de Carga
+                </button>
+                <div id="debug-output" style={{
+                  marginTop: '10px',
+                  padding: '10px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '4px',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  fontSize: '12px',
+                  fontFamily: 'monospace',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  Los resultados de la prueba aparecerán aquí...
                 </div>
               </div>
             )}
