@@ -24,6 +24,18 @@ Al implementar tu aplicación en Vercel, las imágenes almacenadas en el directo
 Vercel es una plataforma sin servidor que no conserva los cambios del sistema de archivos.El directorio /uploads no existe en Vercel Incluso si se subieran archivos, se perderían al finalizar la función sin servidor. Para solucionar esto, modificaré el método de almacenamiento de imágenes para que sea compatible con Vercel. Necesitaremos: Modificar el backend para almacenar las imágenes como datos codificados en base64 en el archivo JSON. AL HACER ESTO YA NO SE USA MULTER 
 /*FIN IMAGENES*/
 
+## MAPAS PARA CARTOGRAFIA EN 3D 
+ MapTiler + CesiumJS
+• 	Usa MapTiler para:
+• 	Base híbrida (satélite + calles)
+• 	Terreno 3D (quantized-mesh)
+• 	Autohospedaje si lo necesitas
+
+• 	Usa CesiumJS para:
+• 	Visualización 3D del municipio
+• 	Rutas simbólicas, marcadores, escenas poéticas
+• 	Integración con React + Vite
+
 ## como instalar Tailwind en react vite ##
 Buscar en navegador para que me de las instruccione de como instalarlo
 
