@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { showErrorNotification } from '../utils/errorHandler';
+import './SensorForm.css';
 
 const SensorForm = ({ onAddSensor }) => {
   const navigate = useNavigate();
@@ -301,828 +302,419 @@ const SensorForm = ({ onAddSensor }) => {
   };
 
   return (
-    <div className="sensor-form">
-      <div style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        padding: '30px',
-        backgroundColor: '#fff',
-        borderRadius: '12px',
-        boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-      }}>
-        <h2 style={{
-          textAlign: 'center',
-          color: '#333',
-          marginBottom: '30px',
-          fontSize: '28px',
-          fontWeight: '600',
-          paddingBottom: '15px',
-          borderBottom: '2px solid #007bff'
-        }}>
-          🌪️ Reportar Incidente por Huracán
-        </h2>
+    <div className="sensor-form-container">
+      <div className="sensor-form-header-decoration"></div>
+      
+      <h2 className="sensor-form-title">
+        🌪️ Reportar Incidente por Huracán
+      </h2>
 
-        {isSubmitting && (
-          <div style={{
-            textAlign: 'center',
-            padding: '15px',
-            backgroundColor: '#e9ecef',
-            borderRadius: '8px',
-            marginBottom: '20px'
-          }}>
-            <p>📤 Guardando incidente... Por favor espere</p>
-          </div>
-        )}
+      {isSubmitting && (
+        <div className="sensor-form-submitting">
+          <p>📤 Guardando incidente... Por favor espere</p>
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px'
-        }}>
-          {/* Nombre del Incidente */}
-          <div className="form-group">
-            <label
-              htmlFor="incidentName"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              🏷️ Nombre del Incidente *
-            </label>
+      <form onSubmit={handleSubmit} className="sensor-form">
+        {/* Nombre del Incidente */}
+        <div className="form-group">
+          <label htmlFor="incidentName" className="form-label">
+            <span className="form-label-icon">🏷️</span>
+            Nombre del Incidente *
+          </label>
+          <input
+            type="text"
+            id="incidentName"
+            name="incidentName"
+            value={formData.incidentName}
+            onChange={handleChange}
+            className={`form-input ${errors.incidentName ? 'error' : ''}`}
+            placeholder="Ej: Huracán Patricia afectando la región"
+          />
+          {errors.incidentName && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.incidentName}
+            </span>
+          )}
+        </div>
+
+        {/* Municipio */}
+        <div className="form-group">
+          <label htmlFor="municipality" className="form-label">
+            <span className="form-label-icon">🏙️</span>
+            Municipio *
+          </label>
+          <input
+            type="text"
+            id="municipality"
+            name="municipality"
+            value={formData.municipality}
+            onChange={handleChange}
+            className={`form-input ${errors.municipality ? 'error' : ''}`}
+            placeholder="Ej: Tetela de Ocampo"
+          />
+          {errors.municipality && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.municipality}
+            </span>
+          )}
+        </div>
+
+        {/* Fecha */}
+        <div className="form-group">
+          <label htmlFor="date" className="form-label">
+            <span className="form-label-icon">📅</span>
+            Fecha *
+          </label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            className={`form-input ${errors.date ? 'error' : ''}`}
+            placeholder="YYYY-MM-DD"
+            pattern="\d{4}-\d{2}-\d{2}"
+            title="Seleccione una fecha del calendario"
+          />
+          {errors.date && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.date}
+            </span>
+          )}
+          <p className="form-hint">
+            Haga clic en el campo para abrir el calendario selector de fecha
+          </p>
+        </div>
+
+        {/* Hora */}
+        <div className="form-group">
+          <label htmlFor="time" className="form-label">
+            <span className="form-label-icon">⏰</span>
+            Hora *
+          </label>
+          <input
+            type="time"
+            id="time"
+            name="time"
+            value={formData.time}
+            onChange={handleChange}
+            className={`form-input ${errors.time ? 'error' : ''}`}
+          />
+          {errors.time && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.time}
+            </span>
+          )}
+        </div>
+
+        {/* Tipo */}
+        <div className="form-group">
+          <label htmlFor="type" className="form-label">
+            <span className="form-label-icon">🌪️</span>
+            Tipo de Incidente
+          </label>
+          <select
+            id="type"
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            className={`form-select ${errors.type ? 'error' : ''}`}
+          >
+            <option value=" ">Seleccione un tipo de incidente</option>
+            <option value="Caida de Arbol" >Caída de árbol</option>
+            <option value="Inundacion">Inundación</option>
+            <option value="Derrumbe">Derrumbe de tierra o laderas</option>
+            <option value="Viento fuerte">Viento fuerte</option>
+            <option value="Caida de techo">Caída de techo o casas</option>
+            <option value="Caida de postes">Caída de postes eléctricos o cables</option>
+            <option value="Vehiculo arrastrado">Vehículos arrastrados por agua</option>
+            <option value="Objetos voladores">Objetos voladores peligrosos</option>
+            <option value="Derrumbe de puente">Derrumbe de puentes o caminos</option>
+            <option value="Rios desbordados">Ríos desbordados o corrientes fuertes</option>
+            <option value="Incendio">Incendio por cortocircuito o gas</option>
+            <option value="Otro">Otro</option>
+          </select>
+          {errors.type && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.type}
+            </span>
+          )}
+        </div>
+
+        {/* Casilla de Verificación de Ubicación Actual */}
+        <div className="form-group">
+          <label className="form-checkbox-label">
+            <span className="form-label-icon">📍</span>
             <input
-              type="text"
-              id="incidentName"
-              name="incidentName"
-              value={formData.incidentName}
-              onChange={handleChange}
-              className={errors.incidentName ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.incidentName ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-              placeholder="Ej: Huracán Patricia afectando la región"
+              type="checkbox"
+              checked={useCurrentLocation}
+              onChange={handleLocationCheckboxChange}
+              className="form-checkbox"
             />
-            {errors.incidentName && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.incidentName}
-              </span>
-            )}
-          </div>
+            Usar mi ubicación actual
+          </label>
+          <p className="form-hint">
+            Marca esta casilla para usar tu ubicación actual como posición
+          </p>
+        </div>
 
-          {/* Municipio */}
-          <div className="form-group">
-            <label
-              htmlFor="municipality"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              🏙️ Municipio *
-            </label>
-            <input
-              type="text"
-              id="municipality"
-              name="municipality"
-              value={formData.municipality}
-              onChange={handleChange}
-              className={errors.municipality ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.municipality ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-              placeholder="Ej: Tetela de Ocampo"
-            />
-            {errors.municipality && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.municipality}
-              </span>
-            )}
-          </div>
+        {/* Latitud */}
+        <div className="form-group">
+          <label htmlFor="latitude" className="form-label">
+            <span className="form-label-icon">🧭</span>
+            Latitud *
+          </label>
+          <input
+            type="number"
+            id="latitude"
+            name="coordinates[1]"
+            value={formData.coordinates[1]}
+            onChange={(e) => {
+              const newCoordinates = [...formData.coordinates];
+              newCoordinates[1] = e.target.value;
+              setFormData(prev => ({
+                ...prev,
+                coordinates: newCoordinates
+              }));
+            }}
+            step="any"
+            disabled={useCurrentLocation}
+            className={`form-input ${errors.latitude ? 'error' : ''}`}
+            placeholder="Ej: 19.75"
+          />
+          {errors.latitude && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.latitude}
+            </span>
+          )}
+        </div>
 
-          {/* Fecha */}
-          <div className="form-group">
-            <label
-              htmlFor="date"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              📅 Fecha *
-            </label>
-            <input
-              type="date"
-              id="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className={errors.date ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.date ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-            />
-            {errors.date && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.date}
-              </span>
-            )}
-          </div>
+        {/* Longitud */}
+        <div className="form-group">
+          <label htmlFor="longitude" className="form-label">
+            <span className="form-label-icon">🌍</span>
+            Longitud *
+          </label>
+          <input
+            type="number"
+            id="longitude"
+            name="coordinates[0]"
+            value={formData.coordinates[0]}
+            onChange={(e) => {
+              const newCoordinates = [...formData.coordinates];
+              newCoordinates[0] = e.target.value;
+              setFormData(prev => ({
+                ...prev,
+                coordinates: newCoordinates
+              }));
+            }}
+            step="any"
+            disabled={useCurrentLocation}
+            className={`form-input ${errors.longitude ? 'error' : ''}`}
+            placeholder="Ej: -97.85"
+          />
+          {errors.longitude && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.longitude}
+            </span>
+          )}
+        </div>
 
-          {/* Hora */}
-          <div className="form-group">
-            <label
-              htmlFor="time"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              ⏰ Hora *
-            </label>
-            <input
-              type="time"
-              id="time"
-              name="time"
-              value={formData.time}
-              onChange={handleChange}
-              className={errors.time ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.time ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-            />
-            {errors.time && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.time}
-              </span>
-            )}
-          </div>
+        {/* Descripción */}
+        <div className="form-group">
+          <label htmlFor="description" className="form-label">
+            <span className="form-label-icon">📝</span>
+            Descripción *
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows="5"
+            className={`form-textarea ${errors.description ? 'error' : ''}`}
+            placeholder="Describe brevemente el incidente..."
+          />
+          {errors.description && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.description}
+            </span>
+          )}
+        </div>
 
-          {/* Tipo */}
-          <div className="form-group">
-            <label
-              htmlFor="type"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              🌪️ Tipo de Incidente *
-            </label>
-            <select
-              id="type"
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              className={errors.type ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.type ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-            >
-              <option value=" ">Seleccione un tipo de incidente</option>
-              <option value="Caida de Arbol" >Caída de árbol</option>
-              <option value="Inundacion">Inundación</option>
-              <option value="Derrumbe">Derrumbe de tierra o laderas</option>
-              <option value="Viento fuerte">Viento fuerte</option>
-              <option value="Caida de techo">Caída de techo o casas</option>
-              <option value="Caida de postes">Caída de postes eléctricos o cables</option>
-              <option value="Vehiculo arrastrado">Vehículos arrastrados por agua</option>
-              <option value="Objetos voladores">Objetos voladores peligrosos</option>
-              <option value="Derrumbe de puente">Derrumbe de puentes o caminos</option>
-              <option value="Rios desbordados">Ríos desbordados o corrientes fuertes</option>
-              <option value="Incendio">Incendio por cortocircuito o gas</option>
-              <option value="Otro">Otro</option>
-            </select>
-            {errors.type && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.type}
-              </span>
-            )}
-          </div>
+        {/* Personas Afectadas */}
+        <div className="form-group">
+          <label htmlFor="affected" className="form-label">
+            <span className="form-label-icon">👥</span>
+            Personas Afectadas *
+          </label>
+          <input
+            type="number"
+            id="affected"
+            name="affected"
+            value={formData.affected}
+            onChange={handleChange}
+            min="0"
+            className={`form-input ${errors.affected ? 'error' : ''}`}
+            placeholder="Número de personas afectadas"
+          />
+          {errors.affected && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.affected}
+            </span>
+          )}
+        </div>
 
-          {/* Casilla de Verificación de Ubicación Actual */}
-          <div className="form-group">
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              color: '#333',
-              fontWeight: '600',
-              fontSize: '16px',
-              cursor: 'pointer'
-            }}>
-              <input
-                type="checkbox"
-                checked={useCurrentLocation}
-                onChange={handleLocationCheckboxChange}
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  marginRight: '10px'
-                }}
-              />
-              📍 Usar mi ubicación actual
-            </label>
-            <p style={{
-              color: '#6c757d',
-              fontSize: '13px',
-              fontStyle: 'italic',
-              marginTop: '5px',
-              marginBottom: '10px'
-            }}>
-              Marca esta casilla para usar tu ubicación actual como posición
-            </p>
-          </div>
+        {/* Número de Teléfono */}
+        <div className="form-group">
+          <label htmlFor="phoneNumber" className="form-label">
+            <span className="form-label-icon">📱</span>
+            Número de Teléfono *
+          </label>
+          <input
+            type="tel"
+            id="phoneNumber"
+            name="phoneNumber"
+            minLength="10"
+            maxLength="10"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            className={`form-input ${errors.phoneNumber ? 'error' : ''}`}
+            placeholder="Ej: 2221234567"
+          />
+          {errors.phoneNumber && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.phoneNumber}
+            </span>
+          )}
+          <p className="form-hint">
+            Ingrese un número de 10 dígitos sin espacios ni guiones
+          </p>
+        </div>
 
-          {/* Latitud */}
-          <div className="form-group">
-            <label
-              htmlFor="latitude"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              🧭 Latitud *
-            </label>
-            <input
-              type="number"
-              id="latitude"
-              name="coordinates[1]"
-              value={formData.coordinates[1]}
-              onChange={(e) => {
-                const newCoordinates = [...formData.coordinates];
-                newCoordinates[1] = e.target.value;
-                setFormData(prev => ({
-                  ...prev,
-                  coordinates: newCoordinates
-                }));
-              }}
-              step="any"
-              disabled={useCurrentLocation}
-              className={errors.latitude ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.latitude ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: useCurrentLocation ? '#f8f9fa' : '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-              placeholder="Ej: 19.75"
-            />
-            {errors.latitude && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.latitude}
-              </span>
-            )}
-          </div>
+        {/* Equipo Asignado */}
+        <div className="form-group">
+          <label htmlFor="assignedTeam" className="form-label">
+            <span className="form-label-icon">📍</span>
+            Localidad *
+          </label>
+          <input
+            type="text"
+            id="assignedTeam"
+            name="assignedTeam"
+            value={formData.assignedTeam}
+            onChange={handleChange}
+            className={`form-input ${errors.assignedTeam ? 'error' : ''}`}
+            placeholder="Nombre de la localidad"
+          />
+          {errors.assignedTeam && (
+            <span className="form-error">
+              <span className="form-error-icon">⚠️</span>
+              {errors.assignedTeam}
+            </span>
+          )}
+        </div>
 
-          {/* Longitud */}
-          <div className="form-group">
-            <label
-              htmlFor="longitude"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              🌍 Longitud *
-            </label>
-            <input
-              type="number"
-              id="longitude"
-              name="coordinates[0]"
-              value={formData.coordinates[0]}
-              onChange={(e) => {
-                const newCoordinates = [...formData.coordinates];
-                newCoordinates[0] = e.target.value;
-                setFormData(prev => ({
-                  ...prev,
-                  coordinates: newCoordinates
-                }));
-              }}
-              step="any"
-              disabled={useCurrentLocation}
-              className={errors.longitude ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.longitude ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: useCurrentLocation ? '#f8f9fa' : '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-              placeholder="Ej: -97.85"
-            />
-            {errors.longitude && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.longitude}
-              </span>
-            )}
-          </div>
+        {/* Carga de Imagen */}
+        <div className="form-group">
+          <label htmlFor="image" className="form-label">
+            <span className="form-label-icon">📷</span>
+            Imagen del Incidente (Opcional)
+          </label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="form-input"
+          />
+          <p className="form-hint">
+            Formatos aceptados: JPG, PNG, GIF. Tamaño máximo: 5MB
+          </p>
 
-          {/* Descripción */}
-          <div className="form-group">
-            <label
-              htmlFor="description"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              📝 Descripción *
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows="4"
-              className={errors.description ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.description ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box',
-                resize: 'vertical'
-              }}
-              placeholder="Describe brevemente el incidente..."
-            />
-            {errors.description && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.description}
-              </span>
-            )}
-          </div>
-
-          {/* Personas Afectadas */}
-          <div className="form-group">
-            <label
-              htmlFor="affected"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              👥 Personas Afectadas *
-            </label>
-            <input
-              type="number"
-              id="affected"
-              name="affected"
-              value={formData.affected}
-              onChange={handleChange}
-              min="0"
-              className={errors.affected ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.affected ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-              placeholder="Número de personas afectadas"
-            />
-            {errors.affected && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.affected}
-              </span>
-            )}
-          </div>
-
-          {/* Número de Teléfono */}
-          <div className="form-group">
-            <label
-              htmlFor="phoneNumber"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              📱 Número de Teléfono *
-            </label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              className={errors.phoneNumber ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.phoneNumber ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-              placeholder="Ej: 2221234567"
-            />
-            {errors.phoneNumber && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.phoneNumber}
-              </span>
-            )}
-            <p style={{
-              color: '#6c757d',
-              fontSize: '12px',
-              fontStyle: 'italic',
-              marginTop: '5px',
-              marginBottom: '0'
-            }}>
-              Ingrese un número de 10 dígitos sin espacios ni guiones
-            </p>
-          </div>
-
-          {/* Equipo Asignado */}
-          <div className="form-group">
-            <label
-              htmlFor="assignedTeam"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              📍 Localidad *
-            </label>
-            <input
-              type="text"
-              id="assignedTeam"
-              name="assignedTeam"
-              value={formData.assignedTeam}
-              onChange={handleChange}
-              className={errors.assignedTeam ? 'error' : ''}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: errors.assignedTeam ? '2px solid #dc3545' : '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-              placeholder="Nombre de la localidad"
-            />
-            {errors.assignedTeam && (
-              <span className="error-message" style={{
-                color: '#dc3545',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginTop: '6px',
-                display: 'block'
-              }}>
-                ⚠️ {errors.assignedTeam}
-              </span>
-            )}
-          </div>
-
-          {/* Carga de Imagen */}
-          <div className="form-group">
-            <label
-              htmlFor="image"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              📷 Imagen del Incidente (Opcional)
-            </label>
-            <input
-              type="file"
-              id="image"
-              name="image"
-              accept="image/*"
-              onChange={handleImageChange}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: '2px solid #ced4da',
-                borderRadius: '8px',
-                color: '#333',
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box'
-              }}
-            />
-            <p style={{
-              color: '#6c757d',
-              fontSize: '12px',
-              fontStyle: 'italic',
-              marginTop: '5px',
-              marginBottom: '0'
-            }}>
-              Formatos aceptados: JPG, PNG, GIF. Tamaño máximo: 5MB
-            </p>
-
-            {/* Vista Previa de la Imagen */}
-            {imagePreview && (
-              <div style={{ marginTop: '15px' }}>
-                <p style={{
-                  fontWeight: '600',
-                  marginBottom: '10px',
-                  color: '#333'
-                }}>
-                  Vista previa de la imagen:
-                </p>
+          {/* Vista Previa de la Imagen */}
+          {imagePreview && (
+            <div className="image-preview-container">
+              <p className="image-preview-title">
+                <span className="form-label-icon">🖼️</span>
+                Vista previa de la imagen:
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <img
                   src={imagePreview}
                   alt="Vista previa"
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '300px',
-                    borderRadius: '8px',
-                    border: '1px solid #ddd'
-                  }}
+                  className="image-preview-img"
                 />
-                <div style={{
-                  marginTop: '10px',
-                  padding: '10px',
-                  backgroundColor: '#d4edda',
-                  border: '1px solid #c3e6cb',
-                  borderRadius: '5px',
-                  color: '#155724'
-                }}>
-                  ✓ La imagen ha sido cargada correctamente. Formato y tamaño válidos.
-                </div>
               </div>
-            )}
-          </div>
-
-          {/* Nivel de Riesgo */}
-          <div className="form-group">
-            <label
-              htmlFor="riskLevel"
-              style={{
-                display: 'block',
-                color: '#333',
-                fontWeight: '600',
-                marginBottom: '8px',
-                fontSize: '16px'
-              }}
-            >
-              ⚠️ Nivel de Riesgo
-            </label>
-            <select
-              id="riskLevel"
-              name="riskLevel"
-              value={formData.riskLevel}
-              onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: '2px solid #ced4da',
-                borderRadius: '8px',
-                color: getRiskColor(formData.riskLevel),
-                backgroundColor: '#fff',
-                fontSize: '16px',
-                fontWeight: '600',
-                transition: 'border-color 0.3s',
-                boxSizing: 'border-box',
-                appearance: 'none',
-                backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 1rem center',
-                backgroundSize: '1em'
-              }}
-            >
-              <option value="Bajo" style={{ color: '#28a745' }}>🟢 Bajo</option>
-              <option value="Medio" style={{ color: '#ffc107' }}>🟡 Medio</option>
-              <option value="Alto" style={{ color: '#dc3545' }}>🔴 Alto</option>
-            </select>
-          </div>
-
-          {/* Acciones de Ancho Completo */}
-          <div style={{
-            textAlign: 'center',
-            paddingTop: '25px',
-            borderTop: '1px solid #dee2e6'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '20px',
-              flexWrap: 'wrap'
-            }}>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                style={{
-                  backgroundColor: isSubmitting ? '#6c757d' : '#007bff',
-                  color: 'white',
-                  padding: '14px 28px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  boxShadow: '0 4px 6px rgba(0,123,255,0.3)',
-                  transition: 'all 0.3s',
-                  minWidth: '200px'
-                }}
-                onMouseOver={(e) => {
-                  if (!isSubmitting) {
-                    e.target.style.transform = 'translateY(-2px)';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (!isSubmitting) {
-                    e.target.style.transform = 'translateY(0)';
-                  }
-                }}
-              >
-                {isSubmitting ? '📤 Guardando...' : '🌪️ Reportar'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  // Cerrar el panel del formulario
-                  const closeButtons = document.querySelectorAll('.close-button');
-                  if (closeButtons.length > 0) {
-                    closeButtons[0].click();
-                  } else {
-                    // Alternativa: navegar a la página principal
-                    navigate('/');
-                  }
-                }}
-                style={{
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  padding: '14px 28px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  boxShadow: '0 4px 6px rgba(108,117,125,0.3)',
-                  transition: 'all 0.3s',
-                  minWidth: '200px'
-                }}
-                onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-              >
-                ❌ Cancelar
-              </button>
+              <div className="image-preview-success">
+                ✓ La imagen ha sido cargada correctamente. Formato y tamaño válidos.
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Nivel de Riesgo */}
+        <div className="form-group">
+          <label htmlFor="riskLevel" className="form-label">
+            <span className="form-label-icon">⚠️</span>
+            Nivel de Riesgo
+          </label>
+          <select
+            id="riskLevel"
+            name="riskLevel"
+            value={formData.riskLevel}
+            onChange={handleChange}
+            className="form-select"
+            style={{ color: getRiskColor(formData.riskLevel) }}
+          >
+            <option value="Bajo" style={{ color: '#28a745' }}>🟢 Bajo</option>
+            <option value="Medio" style={{ color: '#ffc107' }}>🟡 Medio</option>
+            <option value="Alto" style={{ color: '#dc3545' }}>🔴 Alto</option>
+          </select>
+        </div>
+
+        {/* Acciones de Ancho Completo */}
+        <div className="form-actions">
+          <div className="form-actions-buttons">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`form-buttons form-button-submit`}
+            >
+              {isSubmitting ? '📤 Guardando...' : '🌪️ Reportar Incidente'}
+            </button>
+            <button
+              type="button"
+              
+              onClick={() => {
+                // Cerrar el panel del formulario
+                const closeButtons = document.querySelectorAll('.close-button');
+                if (closeButtons.length > 0) {
+                  closeButtons[0].click();
+                } else {
+                  // Alternativa: navegar a la página principal
+                  navigate('/');
+                }
+              }}
+              className="form-buttons form-button-cancel"
+            >
+              ❌ Cancelar
+            </button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 };

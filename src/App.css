@@ -290,15 +290,7 @@
   background-color: #e0a800;
 }
 
-/* Form styles */
-.sensor-form {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-}
+
 
 .sensor-form h2 {
   text-align: center;
