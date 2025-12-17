@@ -9,7 +9,7 @@
 | ☁️ GitHub  | Repositorio remoto            | Después de cada cambio   | Respaldo, control de versiones, historial |
 
 /*IMAGENES*/
-/* SUBIR CON MULTER*/
+##  SUBIR CON MULTER
 PARA SUBIR IMAGENS A MI PAGINA OCUPAMOS MULTER INSTALAMOS LA LIBRERIA 
 Tipos de archivos comunes
 Imágenes: .jpg, .jpeg, .png, .gif, .webp, etc.
@@ -36,16 +36,15 @@ Vercel es una plataforma sin servidor que no conserva los cambios del sistema de
 • 	Rutas simbólicas, marcadores, escenas poéticas
 • 	Integración con React + Vite
 
-## como instalar Tailwind en react vite ##
-Buscar en navegador para que me de las instruccione de como instalarlo
+## ESTILOS DE Tailwind  PAEA REACT + VITE
+https://tailwindcss.com/docs/hover-focus-and-other-states
+
 
 ## CODIGO PARA SUBIR NUEVOS CAMBIOS A GITHUB Y VERSEL
-
 git status  
 git add .  
 git commit -m "Actualizo mapa protector con cambios recientes"  
 git push   
-
 ## FIN CODIGO PARA SUBIR NUEVOS CAMBIOS A GITHUB Y VERSEL
 
 
@@ -55,7 +54,7 @@ curl -X POST https://proteccion-v6o1.onrender.com/api/accidents/restore /BORRAR 
 
 
 
-Qué es Firebase Authentication
+ ## Qué es Firebase Authentication
 
 Firebase Authentication es el servicio de autenticación de usuarios de Google.
 Permite que las personas inicien sesión en tu app usando:
@@ -66,7 +65,7 @@ Permite que las personas inicien sesión en tu app usando:
 🪪 Anónimo (modo temporal sin cuenta)
 
 
-cloudinary + multer
+## cloudinary + multer
 También necesitaremos multer para manejar la carga de archivos. Ahora, vamos a crear un endpoint en tu backend para manejar las cargas de imágenes a Cloudinary. Modificaremos tu archivo simple-backend.js:
 
 
